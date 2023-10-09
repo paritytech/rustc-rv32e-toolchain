@@ -1,0 +1,32 @@
+name : Build and Release
+
+on:
+    push:
+        branches:
+            - main
+
+jobs:
+
+    build:
+        runs-on: ubuntu-latest
+        steps:
+        - uses: actions/checkout@v3
+           with:
+            token: ${{ secrets.WORKFLOW_GIT_ACCESS_TOKEN }}
+
+        # Clone things
+        - name: Download Necessary sources
+          run: ./01-clone.sh
+
+        # Patch things
+        #- name: Apply patches
+          #run: ./02-patch.sh
+
+          # Commit and push all changed files.
+        - name: GIT Commit Build Artifacts (coverage, dist, devdist, docs)
+          run: |
+            git config user.name "gabriele-0201"
+            git config user.email "gabriele.miotti2@gmail.com"
+            git add .
+            git commit -m "GithubAction"
+            git push

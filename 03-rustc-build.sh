@@ -3,4 +3,4 @@
 set -euo pipefail
 
 cd rust
-python x.py build
+python x.py build --stage 2

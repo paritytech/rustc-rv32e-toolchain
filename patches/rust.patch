@@ -1,0 +1,60 @@
+diff --git a/compiler/rustc_codegen_ssa/src/back/metadata.rs b/compiler/rustc_codegen_ssa/src/back/metadata.rs
+index 4ab56699922..2558dd12a9e 100644
+--- a/compiler/rustc_codegen_ssa/src/back/metadata.rs
++++ b/compiler/rustc_codegen_ssa/src/back/metadata.rs
+@@ -181,6 +181,12 @@ pub(crate) fn create_object_file(sess: &Session) -> Option<write::Object<'static
+                 e_flags |= elf::EF_RISCV_RVC;
+             }
+ 
++            // Check if embedded base extension is in use
++            if features.contains("+e") {
++                const EF_RISCV_RVE: u32 = 0x0008;
++                e_flags |= EF_RISCV_RVE;
++            }
++
+             // Select the appropriate floating-point ABI
+             if features.contains("+d") {
+                 e_flags |= elf::EF_RISCV_FLOAT_ABI_DOUBLE;
+diff --git a/compiler/rustc_target/src/spec/mod.rs b/compiler/rustc_target/src/spec/mod.rs
+index bb45fb125b2..c0c651985d9 100644
+--- a/compiler/rustc_target/src/spec/mod.rs
++++ b/compiler/rustc_target/src/spec/mod.rs
+@@ -1195,6 +1195,7 @@ fn $module() {
+     ("aarch64-unknown-hermit", aarch64_unknown_hermit),
+     ("x86_64-unknown-hermit", x86_64_unknown_hermit),
+ 
++    ("riscv32em-unknown-none-elf", riscv32em_unknown_none_elf),
+     ("riscv32i-unknown-none-elf", riscv32i_unknown_none_elf),
+     ("riscv32im-unknown-none-elf", riscv32im_unknown_none_elf),
+     ("riscv32imc-unknown-none-elf", riscv32imc_unknown_none_elf),
+diff --git a/compiler/rustc_target/src/spec/riscv32em_unknown_none_elf.rs b/compiler/rustc_target/src/spec/riscv32em_unknown_none_elf.rs
+new file mode 100644
+index 00000000000..0304eb394c4
+--- /dev/null
++++ b/compiler/rustc_target/src/spec/riscv32em_unknown_none_elf.rs
+@@ -0,0 +1,25 @@
++use crate::spec::{Cc, LinkerFlavor, Lld, PanicStrategy, RelocModel, Target, TargetOptions};
++
++pub fn target() -> Target {
++    Target {
++        data_layout: "e-m:e-p:32:32-i64:64-n32-S32".into(),
++        llvm_target: "riscv32".into(),
++        pointer_width: 32,
++        arch: "riscv32".into(),
++
++        options: TargetOptions {
++            linker_flavor: LinkerFlavor::Gnu(Cc::No, Lld::Yes),
++            linker: Some("rust-lld".into()),
++            cpu: "generic-rv32".into(),
++            features: "+e,+m".into(),
++            llvm_abiname: "ilp32e".into(),
++            max_atomic_width: Some(0),
++            atomic_cas: false,
++            panic_strategy: PanicStrategy::Abort,
++            relocation_model: RelocModel::Static,
++            emit_debug_gdb_scripts: false,
++            eh_frame_header: false,
++            ..Default::default()
++        },
++    }
++}

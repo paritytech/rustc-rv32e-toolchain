@@ -20,7 +20,7 @@ jobs:
           run: ./02-patch.sh
 
         # Build Things
-        - name: Apply patches
+        - name: Build rustc
           run: ./03-rustc-build.sh
 
         # Upload the finl

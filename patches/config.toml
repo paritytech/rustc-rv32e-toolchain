@@ -1,0 +1,37 @@
+changelog-seen = 2
+profile = "codegen"
+
+[llvm]
+download-ci-llvm = false
+targets = "AArch64;RISCV;WebAssembly;X86"
+
+[build]
+compiler-docs = true
+docs = false
+extended = true
+locked-deps = true
+
+tools = [
+    "cargo",
+    "clippy",
+    "rustdoc",
+    "rustfmt",
+    "src",
+]
+
+target = [
+    "x86_64-unknown-linux-gnu",
+    "riscv32em-unknown-none-elf"
+]
+
+[rust]
+channel = "nightly"
+lld = true
+jemalloc = true
+debuginfo-level-std = 2
+remap-debuginfo = true
+new-symbol-mangling = true
+
+[dist]
+compression-formats = ["xz"]
+compression-profile = "balanced"

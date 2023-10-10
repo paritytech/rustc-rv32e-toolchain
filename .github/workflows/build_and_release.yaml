@@ -14,8 +14,8 @@ jobs:
         # Install required packets
         - name: Install ninja
           run: |
-              apt update
-              apt-get install ninja-build -y
+              sudo apt update
+              sudo apt-get -y install ninja-build
 
         # Clone things
         - name: Download Necessary sources

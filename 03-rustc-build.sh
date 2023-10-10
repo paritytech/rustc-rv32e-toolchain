@@ -4,4 +4,4 @@ set -euo pipefail
 
 cd rust
 # library flag avoid to compile rustdoc
-./x build library
+./x build library --stage 1

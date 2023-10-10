@@ -42,4 +42,6 @@ jobs:
         - uses: actions/upload-artifact@v3
           with:
             name: x86_64-rv32e-toolchain
-            path: $(pwd)/rust/build/host/stage1
+            path: |
+              /rust/build/host/stage1/
+              build/host/stage1/

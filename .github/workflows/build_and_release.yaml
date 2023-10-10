@@ -11,7 +11,9 @@ jobs:
         steps:
         - uses: actions/checkout@v3
 
-        -run: |
+        # Install required packets
+        - name: Install ninja
+          run: |
               apt update
               apt-get install ninja-build -y
 
@@ -27,7 +29,7 @@ jobs:
         - name: Build rustc
           run: ./03-rustc-build.sh
 
-        # Upload the finl
+        # Upload the final toolchain
         - uses: actions/upload-artifact@v3
           with:
             name: x86_64-rv32e-toolchain

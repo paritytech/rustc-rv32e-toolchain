@@ -10,46 +10,41 @@ jobs:
         runs-on: ubuntu-latest
         steps:
 
+        - name: Maximize build space
+          uses: easimon/maximize-build-space@master
+          with:
+            root-reserve-mb: 512
+            swap-size-mb: 1024
+            remove-dotnet: 'true'
+            remove-android: 'true'
+
         - uses: actions/checkout@v3
+
+        # Install required packets
+        - name: Install ninja
+          run: |
+              sudo apt update
+              sudo apt-get -y install ninja-build
+
+        # Clone things
+        - name: Download Necessary sources
+          run: ./01-clone.sh
+
+        # Patch things
+        - name: Apply patches
+          run: ./02-patch.sh
+
+        # Build Things
+        - name: Build rustc
+          run: ./03-rustc-build.sh
+
+        # Debug
+        - name: Structure
+          run: |
+            ls -R
 
         # Upload the final toolchain
         - uses: actions/upload-artifact@v3
           with:
-            name: Test upload artifact
-            path: test/
-
-        # - name: Maximize build space
-        #   uses: easimon/maximize-build-space@master
-        #   with:
-        #     root-reserve-mb: 512
-        #     swap-size-mb: 1024
-        #     remove-dotnet: 'true'
-        #     remove-android: 'true'
-
-        # - uses: actions/checkout@v3
-
-        # # Install required packets
-        # - name: Install ninja
-        #   run: |
-        #       sudo apt update
-        #       sudo apt-get -y install ninja-build
-
-        # # Clone things
-        # - name: Download Necessary sources
-        #   run: ./01-clone.sh
-
-        # # Patch things
-        # - name: Apply patches
-        #   run: ./02-patch.sh
-
-        # # Build Things
-        # - name: Build rustc
-        #   run: ./03-rustc-build.sh
-
-        # # Upload the final toolchain
-        # - uses: actions/upload-artifact@v3
-        #   with:
-        #     name: x86_64-rv32e-toolchain
-        #     path: |
-        #       /rust/build/host/stage1/
-        #       build/host/stage1/
+            name: x86_64-rv32e-toolchain
+            path: /rust/build/host/stage1/

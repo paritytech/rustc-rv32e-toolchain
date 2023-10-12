@@ -10,6 +10,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
 
+        # Maximaze runner space removing android-sdk and .net
         - name: Maximize build space
           uses: easimon/maximize-build-space@master
           with:
@@ -38,16 +39,12 @@ jobs:
         - name: Build rustc
           run: ./03-rustc-build.sh
 
-        # Compress
-        - name: Structure
-          run: |
-            cd rust/build/x86_64-unknown-linux-gnu/
-            tar -zcf x86_64-unknown-linux-gnu-stage1.tar.gz stage1
-            # just to make sure that the path in the upload artifact will work
-            cd ../../../
+        # Build Dists
+        - name: Build dist
+          run: ./04-build-dist.sh
 
         # Upload the final toolchain
         - uses: actions/upload-artifact@v3
           with:
-            name: x86_64-rv32e-toolchain
-            path: rust/build/x86_64-unknown-linux-gnu/x86_64-unknown-linux-gnu-stage1.tar.gz
+            name: rv32e_dist
+            path: rust/build/dist/dist_output.tar.gz

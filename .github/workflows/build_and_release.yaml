@@ -36,8 +36,8 @@ jobs:
           run: ./02-patch.sh
 
         # Build Things
-        - name: Build rustc
-          run: ./03-rustc-build.sh
+        #- name: Build rustc
+        #  run: ./03-rustc-build.sh
 
         # Build Dists
         - name: Build dist

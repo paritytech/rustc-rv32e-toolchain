@@ -15,39 +15,44 @@ jobs:
           uses: easimon/maximize-build-space@master
           with:
             root-reserve-mb: 512
-            swap-size-mb: 1024
+            swap-size-mb: 512
             remove-dotnet: 'true'
             remove-android: 'true'
             remove-haskell: 'true'
             remove-codeql: 'true'
             remove-docker-images: 'true'
 
-        - uses: actions/checkout@v3
-
-        # Install required packets
-        - name: Install ninja
+        - name: Free space
           run: |
-              sudo apt update
-              sudo apt-get -y install ninja-build
+            echo "Free space:"
+            df -h
 
-        # Clone things
-        - name: Download Necessary sources
-          run: ./01-clone.sh
+        # - uses: actions/checkout@v3
 
-        # Patch things
-        - name: Apply patches
-          run: ./02-patch.sh
+        # # Install required packets
+        # - name: Install ninja
+        #   run: |
+        #       sudo apt update
+        #       sudo apt-get -y install ninja-build
 
-        # Build Things
-        #- name: Build rustc
-        #  run: ./03-rustc-build.sh
+        # # Clone things
+        # - name: Download Necessary sources
+        #   run: ./01-clone.sh
 
-        # Build Dists
-        - name: Build dist
-          run: ./04-build-dist.sh
+        # # Patch things
+        # - name: Apply patches
+        #   run: ./02-patch.sh
 
-        # Upload the final toolchain
-        - uses: actions/upload-artifact@v3
-          with:
-            name: rv32e_dist
-            path: rust/build/dist/dist_output.tar.gz
+        # # Build Things
+        # #- name: Build rustc
+        # #  run: ./03-rustc-build.sh
+
+        # # Build Dists
+        # - name: Build dist
+        #   run: ./04-build-dist.sh
+
+        # # Upload the final toolchain
+        # - uses: actions/upload-artifact@v3
+        #   with:
+        #     name: rv32e_dist
+        #     path: rust/build/dist/dist_output.tar.gz

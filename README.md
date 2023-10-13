@@ -6,22 +6,14 @@ The target triplet is: riscv32em-unknown-none-elf.
 
 Currently the final binary is published as artifact of the GitHub Action, it is compiled only for Linux x86_64.
 
+## Download 
 
-## Link the Toolchain to rustup
+The toolchain can be downloaded by the last action artifact
 
-To link the provided toolchain you simply need to:
+## Install 
 
-``` sh
-rustup toolchain link rv32e-nightly-2023-04-05-x86_64-unknown-linux-gnu <compiled_rv32e-toolchain>
-```
-
-And if you want to unlink it:
+You just need to download the install `install_toolchain.sh` script and put it the same folder with the file containing the toolchain `rv32e_dist.zip`, and then:
 
 ``` sh
-rustup toolchain uninstall rv32e-nightly-2023-04-05-x86_64-unknown-linux-gnu
+./install_toolchain
 ```
-
-
-## Install the Toolchain
-
-TODO

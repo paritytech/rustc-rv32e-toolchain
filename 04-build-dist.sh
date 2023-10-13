@@ -9,11 +9,10 @@ mkdir -p build/riscv32em-unknown-none-elf/compiler-doc
 ./x dist rustc rust-dev rust-std cargo rust-src rustfmt clippy rustc-docs
 # The output of the compilation shoudl be in ../../rust/build/dist
 
-#DEBUG
-ls -R
 
 # Compress required dists
 cd build/dist/
+ls
 tar -zcf dist_output.tar.gz \
     rustc-nightly-x86_64-unknown-linux-gnu.tar.gz \
     rust-dev-nightly-x86_64-unknown-linux-gnu.tar.gz \

@@ -14,13 +14,13 @@ mkdir -p build/riscv32em-unknown-none-elf/compiler-doc
 cd build/dist/
 ls
 tar -zcf dist_output.tar.gz \
-    rustc-nightly-x86_64-unknown-linux-gnu.tar.gz \
-    rust-dev-nightly-x86_64-unknown-linux-gnu.tar.gz \
-    rust-std-nightly-x86_64-unknown-linux-gnu.tar.gz \
-    rust-std-nightly-riscv32em-unknown-none-elf.tar.gz \
-    cargo-nightly-x86_64-unknown-linux-gnu.tar.gz \
-    rust-src-nightly.tar.gz \
-    rustfmt-nightly-x86_64-unknown-linux-gnu.tar.gz \
-    clippy-nightly-x86_64-unknown-linux-gnu.tar.gz \
-    rustc-docs-nightly-x86_64-unknown-linux-gnu.tar.gz \
-    rustc-docs-nightly-riscv32em-unknown-none-elf.tar.gz
+    rustc-nightly-x86_64-unknown-linux-gnu.tar.xz \
+    rust-dev-nightly-x86_64-unknown-linux-gnu.tar.xz \
+    rust-std-nightly-x86_64-unknown-linux-gnu.tar.xz \
+    rust-std-nightly-riscv32em-unknown-none-elf.tar.xz \
+    cargo-nightly-x86_64-unknown-linux-gnu.tar.xz \
+    rust-src-nightly.tar.xz \
+    rustfmt-nightly-x86_64-unknown-linux-gnu.tar.xz \
+    clippy-nightly-x86_64-unknown-linux-gnu.tar.xz \
+    rustc-docs-nightly-x86_64-unknown-linux-gnu.tar.xz \
+    rustc-docs-nightly-riscv32em-unknown-none-elf.tar.xz

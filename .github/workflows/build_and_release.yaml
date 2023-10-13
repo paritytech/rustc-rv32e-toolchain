@@ -29,30 +29,30 @@ jobs:
             echo "Free space:"
             df -h
 
-        # # Install required packets
-        # - name: Install ninja
-        #   run: |
-        #       sudo apt update
-        #       sudo apt-get -y install ninja-build
+        # Install required packets
+        - name: Install ninja
+          run: |
+              sudo apt update
+              sudo apt-get -y install ninja-build
 
-        # # Clone things
-        # - name: Download Necessary sources
-        #   run: ./01-clone.sh
+        # Clone things
+        - name: Download Necessary sources
+          run: ./01-clone.sh
 
-        # # Patch things
-        # - name: Apply patches
-        #   run: ./02-patch.sh
+        # Patch things
+        - name: Apply patches
+          run: ./02-patch.sh
 
-        # # Build Things
-        # #- name: Build rustc
-        # #  run: ./03-rustc-build.sh
+        # Build Things
+        #- name: Build rustc
+        #  run: ./03-rustc-build.sh
 
-        # # Build Dists
-        # - name: Build dist
-        #   run: ./04-build-dist.sh
+        # Build Dists
+        - name: Build dist
+          run: ./04-build-dist.sh
 
-        # # Upload the final toolchain
-        # - uses: actions/upload-artifact@v3
-        #   with:
-        #     name: rv32e_dist
-        #     path: rust/build/dist/dist_output.tar.gz
+        # Upload the final toolchain
+        - uses: actions/upload-artifact@v3
+          with:
+            name: rv32e_dist
+            path: rust/build/dist/dist_output.tar.gz

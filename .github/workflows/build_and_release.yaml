@@ -2,8 +2,6 @@ name : Build and Release
 
 on:
     push:
-      tags:
-        - '*'
       branches:
           - main
 
@@ -12,53 +10,56 @@ jobs:
         runs-on: ubuntu-latest
         steps:
 
-        # Maximaze runner space removing android-sdk and .net
-        # - name: Maximize build space
-        #   uses: easimon/maximize-build-space@master
-        #   with:
-        #     root-reserve-mb: 512
-        #     swap-size-mb: 1024
-        #     remove-dotnet: 'true'
-        #     remove-android: 'true'
-        #     remove-haskell: 'true'
-        #     remove-codeql: 'true'
-        #     remove-docker-images: 'true'
+        # Maximaze runner space removing preinstalled things
+        - name: Maximize build space
+          uses: easimon/maximize-build-space@master
+          with:
+            root-reserve-mb: 512
+            swap-size-mb: 1024
+            remove-dotnet: 'true'
+            remove-android: 'true'
+            remove-haskell: 'true'
+            remove-codeql: 'true'
+            remove-docker-images: 'true'
 
         - uses: actions/checkout@v3
 
-        - name: Free space
-          run: |
-            echo "Free space:"
-            df -h
+        # - name: Free space
+        #   run: |
+        #     echo "Free space:"
+        #     df -h
 
         # Install required packets
-        # - name: Install ninja
-        #   run: |
-        #       sudo apt update
-        #       sudo apt-get -y install ninja-build
+        - name: Install ninja
+          run: |
+              sudo apt update
+              sudo apt-get -y install ninja-build
 
-        # # Clone things
-        # - name: Download Necessary sources
-        #   run: ./01-clone.sh
+        # Clone things
+        - name: Download Necessary sources
+          run: ./01-clone.sh
 
-        # # Patch things
-        # - name: Apply patches
-        #   run: ./02-patch.sh
+        # Patch things
+        - name: Apply patches
+          run: ./02-patch.sh
 
-        # # Build Things
-        # #- name: Build rustc
-        # #  run: ./03-rustc-build.sh
+        # Build Things
+        #- name: Build rustc
+        #  run: ./03-rustc-build.sh
 
-        # # Build Dists
-        # - name: Build dist
-        #   run: ./04-build-dist.sh
+        # Build Dists
+        - name: Build dist
+          run: ./04-build-dist.sh
 
-        # # Upload the final toolchain
-        # # - uses: actions/upload-artifact@v3
-        # #   with:
-        # #     name: rv32e_dist
-        # #     path: rust/build/dist/dist_output.tar.gz
-
-        # - uses: ncipollo/release-action@v1
+        # Upload the final toolchain
+        # - uses: actions/upload-artifact@v3
         #   with:
-        #     artifacts: "rust/build/dist/dist_output.tar.gz"
+        #     name: rv32e_dist
+        #     path: rust/build/dist/dist_output.tar.gz
+
+        # Create release
+        - uses: ncipollo/release-action@v1
+          with:
+            artifacts: "rust/build/dist/dist_output.tar.gz"
+            name: "rv32e_dist"
+            allowUpdates: true

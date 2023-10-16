@@ -70,4 +70,4 @@ jobs:
           with:
             artifacts: "rust/build/dist/dist_output.tar.gz"
             tag: "${{ env.VersionNumber }}"
-            name: "rv32e_dist ${{ env.VersionNumber }}"
+            name: "rv32e_dist_${{ env.VersionNumber }}"

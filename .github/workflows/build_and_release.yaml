@@ -3,7 +3,7 @@ name : Build and Release
 on:
     push:
       branches:
-          - main
+          - release
 
 permissions:
   contents: write
@@ -66,11 +66,11 @@ jobs:
         - name: Source Version Number
           run: echo "VersionNumber=$(cat version_number)" >> $GITHUB_ENV
 
-        # Create release
-        - uses: ncipollo/release-action@v1
-          with:
-            #artifacts: "rust/build/dist/dist_output.tar.gz"
-            artifacts: "install_toolchain.sh"
-            tag: "${{ env.VersionNumber }}"
-            name: "rv32e_dist ${{ env.VersionNumber }}"
-            allowUpdates: true
+        # # Create release
+        # - uses: ncipollo/release-action@v1
+        #   with:
+        #     #artifacts: "rust/build/dist/dist_output.tar.gz"
+        #     artifacts: "install_toolchain.sh"
+        #     tag: "${{ env.VersionNumber }}"
+        #     name: "rv32e_dist ${{ env.VersionNumber }}"
+        #     allowUpdates: true

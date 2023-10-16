@@ -62,7 +62,7 @@ jobs:
         - name: Source Version Number
           run: echo "VersionNumber=$(cat version_number)" >> $GITHUB_ENV
 
-        Create release
+        # Create release
         - uses: ncipollo/release-action@v1
           with:
             #artifacts: "rust/build/dist/dist_output.tar.gz"

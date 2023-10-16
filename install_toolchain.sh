@@ -14,14 +14,9 @@ inst () {
     cd ../../
 }
 
-# There is currently no way to download artifacts
-# after a workflow run finishes in a format other than a zip
-# or to download artifact contents individually.
-# https://github.com/actions/upload-artifact#zipped-artifact-downloads
 mkdir rust_rv32e
 cd rust_rv32e
-unzip ../rv32e_dist.zip
-tar -xf dist_output.tar.gz
+tar -xf ../dist_output.tar.gz
 
 inst "rustc-nightly-x86_64-unknown-linux-gnu"
 inst "rust-dev-nightly-x86_64-unknown-linux-gnu"
@@ -34,4 +29,4 @@ inst "clippy-nightly-x86_64-unknown-linux-gnu"
 inst "rustc-docs-nightly-x86_64-unknown-linux-gnu"
 inst "rustc-docs-nightly-riscv32em-unknown-none-elf"
 
-echo "you can now delete the folder rust_rv32e and the file rv32e_dist.zip"
+echo "you can now delete the folder rust_rv32e and the file dist_output.tar.gz"

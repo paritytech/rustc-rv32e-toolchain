@@ -73,10 +73,15 @@ jobs:
 
       # Build Dists
       - name: Build dist
+        # test
+        if: matrix.os == 'macos-latest'
         run: ./04-build-dist.sh
 
       # Upload the compiled toolchain
-      - uses: actions/upload-artifact@v3
+      - name: Uplaod Artifacts
+        # test
+        if: matrix.os == 'macos-latest'
+        uses: actions/upload-artifact@v3
         with:
           name: rv32e_dist
           path: rust/build/dist/dist_output.tar.gz

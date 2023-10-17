@@ -1,28 +1,13 @@
 changelog-seen = 2
-profile = "codegen"
+profile = "user"
 
 [llvm]
-download-ci-llvm = false
-targets = "AArch64;RISCV;WebAssembly;X86"
+targets = "AArch64;RISCV;X86"
 
 [build]
 compiler-docs = true
 docs = false
-extended = true
 locked-deps = true
-
-tools = [
-    "cargo",
-    "clippy",
-    "rustdoc",
-    "rustfmt",
-    "src",
-]
-
-target = [
-    "x86_64-unknown-linux-gnu",
-    "riscv32em-unknown-none-elf"
-]
 
 [rust]
 channel = "nightly"
@@ -31,6 +16,7 @@ jemalloc = true
 debuginfo-level-std = 2
 remap-debuginfo = true
 new-symbol-mangling = true
+split-debuginfo = "off"
 
 [dist]
 compression-formats = ["xz"]

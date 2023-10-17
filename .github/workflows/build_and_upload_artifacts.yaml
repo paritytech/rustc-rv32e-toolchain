@@ -1,4 +1,4 @@
-name : Build and Release
+name : Build and Upload Artifacts
 
 on:
     push:
@@ -18,45 +18,65 @@ jobs:
 
     steps:
 
-      # # Maximaze runner space removing preinstalled things
-      # - name: Maximize build space
-      #   uses: easimon/maximize-build-space@master
-      #   with:
-      #     root-reserve-mb: 512
-      #     swap-size-mb: 1024
-      #     remove-dotnet: 'true'
-      #     remove-android: 'true'
-      #     remove-haskell: 'true'
-      #     remove-codeql: 'true'
-      #     remove-docker-images: 'true'
+      # Maximaze runner space removing preinstalled things
+      # do this ONLY on ubuntu-latest
+      - name: Maximize build space
+        if: matrix.os == 'ubuntu-latest'
+        uses: easimon/maximize-build-space@master
+        with:
+          root-reserve-mb: 512
+          swap-size-mb: 1024
+          remove-dotnet: 'true'
+          remove-android: 'true'
+          remove-haskell: 'true'
+          remove-codeql: 'true'
+          remove-docker-images: 'true'
 
-      # - uses: actions/checkout@v3
+      # name: Conditional Step
+      #   run: |
+      #     if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
+      #       echo "This step runs only for ubuntu-latest"
+      #     elif [ "${{ matrix.os }}" == "windows-latest" ]; then
+      #       echo "This step runs only for windows-latest"
+      #     else
+      #       echo "This step runs for other platforms"
+      #     fi
+
+      - uses: actions/checkout@v3
 
       - name: Free space
         run: |
           echo "Free space:"
           df -h
 
-      # # Install required packets
-      # - name: Install ninja
-      #   run: |
-      #       sudo apt update
-      #       sudo apt-get -y install ninja-build
+      # Install required packets
+      - name: Install ninja
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+            sudo apt update
+            sudo apt-get -y install ninja-build
 
-      # # Clone things
-      # - name: Download Necessary sources
-      #   run: ./01-clone.sh
+      - name: Install ninja
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew install ninja
+          # maybe needed
+          # yes | brew install ninja
 
-      # # Patch things
-      # - name: Apply patches
-      #   run: ./02-patch.sh
+      # Clone things
+      - name: Download Necessary sources
+        run: ./01-clone.sh
 
-      # # Build Dists
-      # - name: Build dist
-      #   run: ./04-build-dist.sh
+      # Patch things
+      - name: Apply patches
+        run: ./02-patch.sh
 
-      # # Upload the compiled toolchain
-      # - uses: actions/upload-artifact@v3
-      #   with:
-      #     name: rv32e_dist
-      #     path: rust/build/dist/dist_output.tar.gz
+      # Build Dists
+      - name: Build dist
+        run: ./04-build-dist.sh
+
+      # Upload the compiled toolchain
+      - uses: actions/upload-artifact@v3
+        with:
+          name: rv32e_dist
+          path: rust/build/dist/dist_output.tar.gz

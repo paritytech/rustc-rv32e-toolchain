@@ -85,6 +85,6 @@ jobs:
       - name: Uplaod Artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: rv32e_dist-${{ env.VersionNumber }}
+          name: "rv32e_dist_${{ env.VersionNumber }}"
           #path: rust/build/dist/dist_output.tar.gz
           path: version_number

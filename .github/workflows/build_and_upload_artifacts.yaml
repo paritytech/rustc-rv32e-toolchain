@@ -78,7 +78,7 @@ jobs:
       # Extract OS version and save it
       - name: Extract OS version
         run: |
-          os_version=${{ matrix.os%-* }}
+          os_version=${{ matrix.os }} | cut -d '-' -f 1
           echo "OsVersion=$os_version" >> $GITHUB_ENV
 
       # Upload the compiled toolchain

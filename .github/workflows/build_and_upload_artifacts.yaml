@@ -20,17 +20,17 @@ jobs:
 
       # Maximaze runner space removing preinstalled things
       # do this ONLY on ubuntu-latest
-      # - name: Maximize build space
-      #   if: matrix.os == 'ubuntu-latest'
-      #   uses: easimon/maximize-build-space@master
-      #   with:
-      #     root-reserve-mb: 512
-      #     swap-size-mb: 1024
-      #     remove-dotnet: 'true'
-      #     remove-android: 'true'
-      #     remove-haskell: 'true'
-      #     remove-codeql: 'true'
-      #     remove-docker-images: 'true'
+      - name: Maximize build space
+        if: matrix.os == 'ubuntu-latest'
+        uses: easimon/maximize-build-space@master
+        with:
+          root-reserve-mb: 512
+          swap-size-mb: 1024
+          remove-dotnet: 'true'
+          remove-android: 'true'
+          remove-haskell: 'true'
+          remove-codeql: 'true'
+          remove-docker-images: 'true'
 
       # name: Conditional Step
       #   run: |
@@ -49,38 +49,37 @@ jobs:
       #     echo "Free space:"
       #     df -h
 
-      # # Install required packets
-      # - name: Install ninja
-      #   if: matrix.os == 'ubuntu-latest'
-      #   run: |
-      #       sudo apt update
-      #       sudo apt-get -y install ninja-build
+      # Install required packets
+      # TODO: maybe there is a better syntax to include everything in one step
+      - name: Install ninja
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+            sudo apt update
+            sudo apt-get -y install ninja-build
 
-      # - name: Install ninja
-      #   if: matrix.os == 'macos-latest'
-      #   run: |
-      #     brew install ninja
-      #     # maybe needed
-      #     # yes | brew install ninja
+      - name: Install ninja
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew install ninja
+          # maybe needed
+          # yes | brew install ninja
 
-      # # Clone things
-      # - name: Download Necessary sources
-      #   run: ./01-clone.sh
+      # Clone things
+      - name: Download Necessary sources
+        run: ./01-clone.sh
 
-      # # Patch things
-      # - name: Apply patches
-      #   run: ./02-patch.sh
+      # Patch things
+      - name: Apply patches
+        run: ./02-patch.sh
 
-      # # Build Dists
-      # - name: Build dist
-      #   run: ./04-build-dist.sh
+      # Build Dists
+      - name: Build dist
+        run: ./04-build-dist.sh
 
       # Extract OS version and save it
       - name: Extract OS version
         run: |
           os_version=$(echo ${{ matrix.os }} | cut -d '-' -f 1)
-          echo $os_version
-          echo "OsVersion=$os_version"
           echo "OsVersion=$os_version" >> $GITHUB_ENV
 
       # Upload the compiled toolchain
@@ -88,5 +87,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: "rv32e_dist_${{ env.OsVersion }}"
-          #path: rust/build/dist/dist_output.tar.gz
-          path: version_number
+          path: rust/build/dist/dist_output.tar.gz

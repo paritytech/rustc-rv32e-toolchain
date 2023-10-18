@@ -32,25 +32,9 @@ jobs:
           remove-codeql: 'true'
           remove-docker-images: 'true'
 
-      # name: Conditional Step
-      #   run: |
-      #     if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
-      #       echo "This step runs only for ubuntu-latest"
-      #     elif [ "${{ matrix.os }}" == "windows-latest" ]; then
-      #       echo "This step runs only for windows-latest"
-      #     else
-      #       echo "This step runs for other platforms"
-      #     fi
-
       - uses: actions/checkout@v3
 
-      # - name: Free space
-      #   run: |
-      #     echo "Free space:"
-      #     df -h
-
       # Install required packets
-      # TODO: maybe there is a better syntax to include everything in one step
       - name: Install ninja
         if: matrix.os == 'ubuntu-latest'
         run: |
@@ -61,8 +45,16 @@ jobs:
         if: matrix.os == 'macos-latest'
         run: |
           brew install ninja
-          # maybe needed
-          # yes | brew install ninja
+
+
+      # - name: Set OS variable
+      #   run: |
+      #     if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
+      #       export OS=linux
+      #     elif [ "${{ matrix.os }}" == "macos-latest" ]; then
+      #       export OS=apple
+      #     fi
+
 
       # Clone things
       - name: Download Necessary sources
@@ -76,14 +68,29 @@ jobs:
       - name: Build dist
         run: ./04-build-dist.sh
 
-      # Extract OS version and save it
-      - name: Extract OS version
-        run: |
-          os_version=$(echo ${{ matrix.os }} | cut -d '-' -f 1)
-          echo "OsVersion=$os_version" >> $GITHUB_ENV
+      # name: Conditional Step
+      #   run: |
+      #     if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
+      #       echo "This step runs only for ubuntu-latest"
+      #     elif [ "${{ matrix.os }}" == "windows-latest" ]; then
+      #       echo "This step runs only for windows-latest"
+      #     else
+      #       echo "This step runs for other platforms"
+      #     fi
+
+      # TODO: push in the env variable the ARTIFACT_NAME but witout exporting everything
+      - run: ./config.sh
 
       # Upload the compiled toolchain
       - name: Uplaod Artifacts
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v3
+        with:
+          name: "rv32e_dist_${{ env.OsVersion }}"
+          path: rust/build/dist/dist_output.tar.gz
+
+      - name: Uplaod Artifacts
+        if: matrix.os == 'macos-latest'
         uses: actions/upload-artifact@v3
         with:
           name: "rv32e_dist_${{ env.OsVersion }}"

@@ -68,6 +68,7 @@ jobs:
         # Create release
         - uses: ncipollo/release-action@v1
           with:
-            artifacts: "rust/build/dist/dist_output.tar.gz"
-            tag: "${{ env.VersionNumber }}"
-            name: "rv32e_dist_${{ env.VersionNumber }}"
+            # artifacts: "rust/build/dist/dist_output.tar.gz"
+            artifacts: "${{ env.ARTIFACT_NAME }}.tar.gz"
+            tag: "${{ env.ARTIFACT_NAME }}"
+            name: "${{ env.ARTIFACT_NAME }}"

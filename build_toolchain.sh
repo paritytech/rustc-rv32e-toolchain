@@ -27,7 +27,7 @@ inst "clippy-nightly-$TOOLCHAIN_HOST_TRIPLET"
 cd ../../../../
 
 # clean up the manifests and remove the install log
-sed -i "s/\/tmp\/destdir\/$TOOLCHAIN_NAME\///g" /tmp/destdir/$TOOLCHAIN_NAME/lib/rustlib/manifest-*
+sed -i "s#/tmp/destdir/$TOOLCHAIN_NAME/##g" /tmp/destdir/$TOOLCHAIN_NAME/lib/rustlib/manifest-*
 rm -f /tmp/destdir/$TOOLCHAIN_NAME/lib/rustlib/install.log
 
 # Create Artifact folder
@@ -36,6 +36,7 @@ mkdir $ARTIFACT_NAME
 cp -r /tmp/destdir/$TOOLCHAIN_NAME $ARTIFACT_NAME
 
 # Meta install
+# TODO: this could be done directly in the file usind sed -i
 general_install=$(cat general_install.sh)
 install=$(echo -e "$general_install" | sed "s/TOOLCHAIN_NAME_TODO/$TOOLCHAIN_NAME/")
 echo -e "$install" > install.sh

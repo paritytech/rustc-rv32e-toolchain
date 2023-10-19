@@ -27,8 +27,10 @@ inst "clippy-nightly-$TOOLCHAIN_HOST_TRIPLET"
 cd ../../../../
 
 # clean up the manifests and remove the install log
-sed -i "s#/tmp/destdir/$TOOLCHAIN_NAME/##g" /tmp/destdir/$TOOLCHAIN_NAME/lib/rustlib/manifest-*
-rm -f /tmp/destdir/$TOOLCHAIN_NAME/lib/rustlib/install.log
+# TODO this does not work on macos
+# sed -i "s#/tmp/destdir/$TOOLCHAIN_NAME/##g" /tmp/destdir/$TOOLCHAIN_NAME/lib/rustlib/manifest-*
+# this is remove just to be sure it works
+# rm -f /tmp/destdir/$TOOLCHAIN_NAME/lib/rustlib/install.log
 
 # Create Artifact folder
 mkdir $ARTIFACT_NAME

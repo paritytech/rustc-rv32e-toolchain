@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
-# TODO: not sure why this was making the script stop and return unbounded $1
-# set -euo pipefail
+set -euo pipefail
 
 source config.sh
 

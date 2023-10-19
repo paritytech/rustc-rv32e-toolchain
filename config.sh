@@ -11,6 +11,8 @@ export TOOLCHAIN_VERSION=$(rustc --version --verbose | grep 'release: ' | sed -r
 export TOOLCHAIN_NAME=riscv32em-$TOOLCHAIN_VERSION-$TOOLCHAIN_HOST_TRIPLET
 export ARTIFACT_NAME=rust-$TOOLCHAIN_NAME
 
-if [ -n "$1" ] && [ "$1" == "-artifact_name" ]; then
+param1=${1:-}
+
+if [ "$param1" == "-artifact_name" ]; then
     echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> $GITHUB_ENV
 fi

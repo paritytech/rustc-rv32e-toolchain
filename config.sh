@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
-
 # TODO: this is executed BEFORE building rustc, this mean that
 # rustc is already installed on the machine if this work
 
@@ -11,6 +9,8 @@ export TOOLCHAIN_HOST_TRIPLET=$(rustc --version --verbose | grep 'host: ' | sed 
 export TOOLCHAIN_VERSION=$(rustc --version --verbose | grep 'release: ' | sed -r 's/release: (.*)/\1/')-r$(cat release_number)
 
 export TOOLCHAIN_NAME=riscv32em-$TOOLCHAIN_VERSION-$TOOLCHAIN_HOST_TRIPLET
+export ARTIFACT_NAME=rust-$TOOLCHAIN_NAME
 
-ARTIFACT_NAME=rust-$TOOLCHAIN_NAME
-echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> $GITHUB_ENV
+if [ -n "$1" ] && [ "$1" == "-artifact_name" ]; then
+    echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> $GITHUB_ENV
+fi

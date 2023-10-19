@@ -46,52 +46,29 @@ jobs:
         run: |
           brew install ninja
 
-
-      # - name: Set OS variable
-      #   run: |
-      #     if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
-      #       export OS=linux
-      #     elif [ "${{ matrix.os }}" == "macos-latest" ]; then
-      #       export OS=apple
-      #     fi
-
-
       # Clone things
       - name: Download Necessary sources
-        run: ./01-clone.sh
+        run: ./clone.sh
 
       # Patch things
       - name: Apply patches
-        run: ./02-patch.sh
+        run: ./patch.sh
 
       # Build Dists
       - name: Build dist
-        run: ./04-build-dist.sh
+        run: ./build_dist.sh
 
-      # name: Conditional Step
-      #   run: |
-      #     if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
-      #       echo "This step runs only for ubuntu-latest"
-      #     elif [ "${{ matrix.os }}" == "windows-latest" ]; then
-      #       echo "This step runs only for windows-latest"
-      #     else
-      #       echo "This step runs for other platforms"
-      #     fi
+      # Build Toolchain
+      - name: Build Toolchain
+        run: ./build_toolchain.sh
 
-      # TODO: push in the env variable the ARTIFACT_NAME but witout exporting everything
-      - run: ./config.sh
+      # Push in the Github environment variable the name of the artifact
+      # TODO: maybe there is a batter way to do this, without calling this script
+      - run: ./config.sh -artifact_name
 
       # Upload the compiled toolchain
       - name: Uplaod Artifacts
-        if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v3
         with:
-          name: "rv32e_dist_${{ env.OsVersion }}"
-          path: rust/build/dist/dist_output.tar.gz
-
-      - name: Uplaod Artifacts
-        if: matrix.os == 'macos-latest'
-        uses: actions/upload-artifact@v3
-        with:
-          name: "rv32e_dist_${{ env.OsVersion }}"
-          path: rust/build/dist/dist_output.tar.gz
+          name: "${{ env.ARTIFACT_NAME }}"
+          path: "${{ env.ARTIFACT_NAME }}.tar.gz"

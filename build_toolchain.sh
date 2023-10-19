@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
+# TODO: not sure why this was making the script stop and return unbounded $1
+# set -euo pipefail
 
 source config.sh
 
@@ -14,20 +15,35 @@ inst () {
 
 cd rust/build/dist/
 mkdir unpack
-cd unnpack
+cd unpack
 
-inst "rustc-nightly-$TOOLCHAIN_HOST_TRIPLET.tar.xz"
-inst "rust-std-nightly-$TOOLCHAIN_HOST_TRIPLET.tar.xz"
-inst "rust-std-nightly-riscv32em-unknown-none-elf.tar.xz"
-inst "cargo-nightly-$TOOLCHAIN_HOST_TRIPLET.tar.xz"
-inst "rust-src-nightly.tar.xz"
-inst "rustfmt-nightly-$TOOLCHAIN_HOST_TRIPLET.tar.xz"
-inst "clippy-nightly-$TOOLCHAIN_HOST_TRIPLET.tar.xz"
+inst "rustc-nightly-$TOOLCHAIN_HOST_TRIPLET"
+inst "rust-std-nightly-$TOOLCHAIN_HOST_TRIPLET"
+inst "rust-std-nightly-riscv32em-unknown-none-elf"
+inst "cargo-nightly-$TOOLCHAIN_HOST_TRIPLET"
+inst "rust-src-nightly"
+inst "rustfmt-nightly-$TOOLCHAIN_HOST_TRIPLET"
+inst "clippy-nightly-$TOOLCHAIN_HOST_TRIPLET"
+
+cd ../../../../
 
 # clean up the manifests and remove the install log
 sed -i "s/\/tmp\/destdir\/$TOOLCHAIN_NAME\///g" /tmp/destdir/$TOOLCHAIN_NAME/lib/rustlib/manifest-*
 rm -f /tmp/destdir/$TOOLCHAIN_NAME/lib/rustlib/install.log
 
-# cp install.sh /tmp/destdir/
+# Create Artifact folder
+mkdir $ARTIFACT_NAME
+# copy toolchain
+cp -r /tmp/destdir/$TOOLCHAIN_NAME $ARTIFACT_NAME
 
-tar -zcf $TOOLCHAIN_NAME.tar.xz /tmp/destdir/$TOOLCHAIN_NAME install.sh
+# Meta install
+general_install=$(cat general_install.sh)
+install=$(echo -e "$general_install" | sed "s/TOOLCHAIN_NAME_TODO/$TOOLCHAIN_NAME/")
+echo -e "$install" > install.sh
+chmod +x install.sh
+
+# copy install script
+cp install.sh $ARTIFACT_NAME
+
+# compress the final artifact
+tar -zcf $ARTIFACT_NAME.tar.xz $ARTIFACT_NAME

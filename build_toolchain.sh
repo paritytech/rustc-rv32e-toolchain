@@ -12,12 +12,11 @@ inst () {
     cd ../
 }
 
-mkdir dist_result
-cp -r rust/build/dist dist_result
+cp -r rust/build/dist .
 # remove all the rust folder to save some space
 rm -r rust
 ls -R
-cd dist_result
+cd dist
 mkdir unpack
 cd unpack
 

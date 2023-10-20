@@ -12,7 +12,11 @@ inst () {
     cd ../
 }
 
-cd rust/build/dist/
+mkdir dist_result
+cp -r rust/build/dist dist_result
+# remove all the rust folder to save some space
+rm -r rust
+cd dist_result
 mkdir unpack
 cd unpack
 
@@ -24,11 +28,13 @@ inst "rust-src-nightly"
 inst "rustfmt-nightly-$TOOLCHAIN_HOST_TRIPLET"
 inst "clippy-nightly-$TOOLCHAIN_HOST_TRIPLET"
 
-cd ../../../../
+cd ../../
 
 # clean up the manifests and remove the install log
 # TODO this does not work on macos
 # sed -i "s#/tmp/destdir/$TOOLCHAIN_NAME/##g" /tmp/destdir/$TOOLCHAIN_NAME/lib/rustlib/manifest-*
+# maybe this?
+# sed -i 's#/tmp/destdir/$TOOLCHAIN_NAME/##g' /tmp/destdir/$TOOLCHAIN_NAME/lib/rustlib/manifest-*
 # this is remove just to be sure it works
 # rm -f /tmp/destdir/$TOOLCHAIN_NAME/lib/rustlib/install.log
 

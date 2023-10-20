@@ -16,6 +16,7 @@ mkdir dist_result
 cp -r rust/build/dist dist_result
 # remove all the rust folder to save some space
 rm -r rust
+ls -R
 cd dist_result
 mkdir unpack
 cd unpack

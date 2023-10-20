@@ -14,7 +14,8 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest]
+        # os: [ubuntu-latest, macos-latest]
 
     steps:
 
@@ -71,4 +72,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: "${{ env.ARTIFACT_NAME }}"
-          path: "${{ env.ARTIFACT_NAME }}.tar.gz"
+          path: "${{ env.ARTIFACT_NAME }}.tar.xz"

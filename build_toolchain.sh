@@ -12,7 +12,7 @@ inst () {
     cd ../
 }
 
-cp -r rust/build/dist .
+mv rust/build/dist .
 # remove all the rust folder to save some space
 rm -r rust
 ls -R

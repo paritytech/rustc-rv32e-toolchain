@@ -12,7 +12,11 @@ inst () {
     cd ../
 }
 
-cd rust/build/dist
+mv rust/build/dist .
+# remove rust to have some space to create the toolchain
+rm -r rust
+
+cd dist
 mkdir unpack
 cd unpack
 
@@ -24,10 +28,7 @@ inst "rust-src-nightly"
 inst "rustfmt-nightly-$TOOLCHAIN_HOST_TRIPLET"
 inst "clippy-nightly-$TOOLCHAIN_HOST_TRIPLET"
 
-cd ../../../../
-
-# remove rust to have some space to create the toolchain
-rm -r rust
+cd ../../
 
 # clean up the manifests and remove the install log
 # TODO this does not work on macos

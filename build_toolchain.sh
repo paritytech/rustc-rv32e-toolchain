@@ -12,9 +12,11 @@ inst () {
     cd ../
 }
 
+df -h
 mv rust/build/dist .
 # remove rust to have some space to create the toolchain
 rm -r rust
+df -h
 
 cd dist
 mkdir unpack

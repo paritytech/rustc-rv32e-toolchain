@@ -18,59 +18,55 @@ jobs:
 
     steps:
 
-      # - name: Free Disk Space (Ubuntu)
-      #   if: matrix.os == 'ubuntu-latest'
-      #   uses: jlumbroso/free-disk-space@main
-      #   with:
-      #     tool-cache: true
-      #     android: true
-      #     dotnet: true
-      #     haskell: true
-      #     large-packages: true
-      #     docker-images: true
-      #     swap-storage: true
+      - name: Free Disk Space (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
 
       - uses: actions/checkout@v3
 
-      # Clone things
-      - name: Test Sed
-        run: ./test_sed.sh
-
       # Install required packets
-      # - name: Install ninja
-      #   if: matrix.os == 'ubuntu-latest'
-      #   run: |
-      #       sudo apt update
-      #       sudo apt-get -y install ninja-build
+      - name: Install ninja
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+            sudo apt update
+            sudo apt-get -y install ninja-build
 
-      # - name: Install ninja
-      #   if: matrix.os == 'macos-latest'
-      #   run: |
-      #     brew install ninja
+      - name: Install ninja
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew install ninja
 
-      # # Clone things
-      # - name: Download Necessary sources
-      #   run: ./clone.sh
+      # Clone things
+      - name: Download Necessary sources
+        run: ./clone.sh
 
-      # # Patch things
-      # - name: Apply patches
-      #   run: ./patch.sh
+      # Patch things
+      - name: Apply patches
+        run: ./patch.sh
 
-      # # Build Dists
-      # - name: Build dist
-      #   run: ./build_dist.sh
+      # Build Dists
+      - name: Build dist
+        run: ./build_dist.sh
 
-      # # Build Toolchain
-      # - name: Build Toolchain
-      #   run: ./build_toolchain.sh
+      # Build Toolchain
+      - name: Build Toolchain
+        run: ./build_toolchain.sh
 
-      # # Push in the Github environment variable the name of the artifact
-      # # TODO: maybe there is a batter way to do this, without calling this script
-      # - run: ./config.sh -artifact_name
+      # Push in the Github environment variable the name of the artifact
+      # TODO: maybe there is a batter way to do this, without calling this script
+      - run: ./config.sh -artifact_name
 
-      # # Upload the compiled toolchain
-      # - name: Uplaod Artifacts
-      #   uses: actions/upload-artifact@v3
-      #   with:
-      #     name: "${{ env.ARTIFACT_NAME }}"
-      #     path: "${{ env.ARTIFACT_NAME }}.tar.xz"
+      # Upload the compiled toolchain
+      - name: Uplaod Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: "${{ env.ARTIFACT_NAME }}"
+          path: "${{ env.ARTIFACT_NAME }}.tar.xz"

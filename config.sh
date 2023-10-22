@@ -6,7 +6,7 @@ export RUST_COMMIT=8d321f7a88f0ae27793c133390e507bf1f49125a
 
 # If -rust_commit specified then only export the rust commit variable
 if [ "$param1" == "-rust_commit" ]; then
-  exit 0
+  return
 fi
 
 export TOOLCHAIN_HOST_TRIPLET=$(rustc --version --verbose | grep 'host: ' | sed -r 's/host: (.*)/\1/')

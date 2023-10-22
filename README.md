@@ -6,12 +6,15 @@ The target triplet is: riscv32em-unknown-none-elf.
 
 ## Download 
 
-The toolchain can be downloaded in the last releases as a `.tar.gz` file.
+The toolchain can be downloaded in the last releases as a `.tar.xz` file.
 
 ## Install 
 
-You just need to download the install `install_toolchain.sh` script and put it the same folder with the file containing the toolchain `rv32e_dist.tar.gz`, and then:
+Now you just need to extract what is contained in the file downloaded from the release, you will find:
++ an installation script
++ a folder containing the toolchain
+All you have to do now is run the script
 
 ``` sh
-./install_toolchain
+./install.sh
 ```

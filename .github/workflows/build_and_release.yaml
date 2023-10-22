@@ -9,66 +9,65 @@ permissions:
   contents: write
 
 jobs:
-    build:
-        runs-on: ubuntu-latest
-        steps:
+  build:
+    runs-on: ${{ matrix.os }}
 
-        # Maximaze runner space removing preinstalled things
-        - name: Maximize build space
-          uses: easimon/maximize-build-space@master
-          with:
-            root-reserve-mb: 512
-            swap-size-mb: 1024
-            remove-dotnet: 'true'
-            remove-android: 'true'
-            remove-haskell: 'true'
-            remove-codeql: 'true'
-            remove-docker-images: 'true'
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
 
-        - uses: actions/checkout@v3
+    steps:
 
-        # - name: Free space
-        #   run: |
-        #     echo "Free space:"
-        #     df -h
+      - name: Free Disk Space (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
 
-        # Install required packets
-        - name: Install ninja
-          run: |
-              sudo apt update
-              sudo apt-get -y install ninja-build
+      - uses: actions/checkout@v3
 
-        # Clone things
-        - name: Download Necessary sources
-          run: ./01-clone.sh
+      # Install required packets
+      - name: Install ninja
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+            sudo apt update
+            sudo apt-get -y install ninja-build
 
-        # Patch things
-        - name: Apply patches
-          run: ./02-patch.sh
+      - name: Install ninja
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew install ninja
 
-        # Build rustc
-        #- name: Build rustc
-        #  run: ./03-rustc-build.sh
+      # Clone things
+      - name: Download Necessary sources
+        run: ./clone.sh
 
-        # Build Dists
-        - name: Build dist
-          run: ./04-build-dist.sh
+      # Patch things
+      - name: Apply patches
+        run: ./patch.sh
 
-        # # Upload the compiled toolchain
-        # # - uses: actions/upload-artifact@v3
-        # #   with:
-        # #     name: rv32e_dist
-        # #     path: rust/build/dist/dist_output.tar.gz
+      # Build Dists
+      - name: Build dist
+        run: ./build_dist.sh
 
-        # Fetch version number from repo
-        # usage : ${{ env.VersionNumber }}
-        - name: Source Version Number
-          run: echo "VersionNumber=$(cat version_number)" >> $GITHUB_ENV
+      # Push in the Github environment variable the name of the artifact
+      # Doing this now because in the following step the rust folder will be delated to save some space before installing the toolchain
+      - run: ./config.sh -artifact_name
 
-        # Create release
-        - uses: ncipollo/release-action@v1
-          with:
-            # artifacts: "rust/build/dist/dist_output.tar.gz"
-            artifacts: "${{ env.ARTIFACT_NAME }}.tar.gz"
-            tag: "${{ env.ARTIFACT_NAME }}"
-            name: "${{ env.ARTIFACT_NAME }}"
+      # Build Toolchain
+      - name: Build Toolchain
+        run: ./build_toolchain.sh
+
+      # Create release
+      - name: Uplaod Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "${{ env.ARTIFACT_NAME }}.tar.xz"
+          tag: "${{ env.ARTIFACT_NAME }}"
+          name: "${{ env.ARTIFACT_NAME }}"

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-TOOLCHAIN_NAME=TOOLCHAIN_NAME_TODO
+TOOLCHAIN_NAME=TOOLCHAIN_NAME_VARIABLE
 
 if [ -n "$1" ] && [ "$1" == "-f" ]; then
     echo "Installation toolchain: $TOOLCHAIN_NAME"
@@ -17,5 +17,11 @@ else
     fi
 fi
 
-cp -r $TOOLCHAIN_NAME $HOME/.rustup/toolchains/
+if [ -d "$HOME/.rustup/toolchains/$TOOLCHAIN_NAME" ]; then
+    echo "Toolchain already installed"
+    exit 0
+fi
+
+cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
+cp -r $TOOLCHAIN_NAME "$HOME/.rustup/toolchains/"
 echo "Installation done!"

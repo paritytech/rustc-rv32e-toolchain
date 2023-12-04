@@ -1,9 +1,9 @@
-name : Build and Release
+name: Build and Release
 
 on:
-    push:
-      branches:
-          - release
+  push:
+    branches:
+      - release
 
 permissions:
   contents: write
@@ -14,10 +14,9 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest-xlarge]
 
     steps:
-
       - name: Free Disk Space (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
         uses: jlumbroso/free-disk-space@main
@@ -36,11 +35,11 @@ jobs:
       - name: Install ninja
         if: matrix.os == 'ubuntu-latest'
         run: |
-            sudo apt update
-            sudo apt-get -y install ninja-build
+          sudo apt update
+          sudo apt-get -y install ninja-build
 
       - name: Install ninja
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-latest-xlarge'
         run: |
           brew install ninja
 

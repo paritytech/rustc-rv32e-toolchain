@@ -65,7 +65,7 @@ jobs:
         run: ./build_toolchain.sh
 
       # Create release
-      - name: Uplaod Release
+      - name: Upload Release
         uses: ncipollo/release-action@v1
         with:
           artifacts: "${{ env.ARTIFACT_NAME }}.tar.xz"

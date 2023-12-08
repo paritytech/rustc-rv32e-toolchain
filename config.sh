@@ -25,11 +25,11 @@ else
   exit 1
 fi
 
+export TOOLCHAIN_NAME=rv32e-nightly-2023-04-05
 export TOOLCHAIN_VERSION=nightly-$rust_commit_date-r$(cat release_number)
-
-export TOOLCHAIN_NAME=riscv32em-$TOOLCHAIN_VERSION-$TOOLCHAIN_HOST_TRIPLET
+export TOOLCHAIN_VERSION_NAME=riscv32em-$TOOLCHAIN_VERSION-$TOOLCHAIN_HOST_TRIPLET
 export FOLDER_NAME=rust-riscv32em-$TOOLCHAIN_HOST_TRIPLET
-export ARTIFACT_NAME=rust-$TOOLCHAIN_NAME
+export ARTIFACT_NAME=rust-$TOOLCHAIN_VERSION_NAME
 
 if [ "$param1" == "-artifact_name" ]; then
     echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> $GITHUB_ENV

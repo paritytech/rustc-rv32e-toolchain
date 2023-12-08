@@ -39,7 +39,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           apt update
-          apt-get -y install ninja-build
+          apt-get -y install ninja-build patch
 
       - name: Install ninja
         if: matrix.os == 'macos-latest-xlarge'

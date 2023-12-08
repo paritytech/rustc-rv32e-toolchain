@@ -12,7 +12,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         include:
-          - os: macos-latest-xlarge
+          # - os: macos-latest-xlarge
           - os: ubuntu-latest
             container: "paritytech/ci-unified:bullseye-1.74.0-2023-11-01-v20231204"
     runs-on: ${{ matrix.os }}
@@ -37,7 +37,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           apt update
-          apt-get -y install ninja-build
+          apt-get -y install ninja-build patch
 
       - name: Install ninja
         if: matrix.os == 'macos-latest-xlarge'

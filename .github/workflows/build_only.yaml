@@ -1,12 +1,10 @@
-name: Build and Release
+name: Build and Upload Artifacts
 
 on:
-  push:
-    branches:
-      - release
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
 
-permissions:
-  contents: write
+permissions: {}
 
 jobs:
   build:
@@ -65,11 +63,3 @@ jobs:
       # Build Toolchain
       - name: Build Toolchain
         run: ./build_toolchain.sh
-
-      # Create release
-      - name: Uplaod Release
-        uses: ncipollo/release-action@v1
-        with:
-          artifacts: "${{ env.ARTIFACT_NAME }}.tar.xz"
-          tag: "${{ env.ARTIFACT_NAME }}"
-          name: "${{ env.ARTIFACT_NAME }}"

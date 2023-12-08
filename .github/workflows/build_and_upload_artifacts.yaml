@@ -10,12 +10,15 @@ permissions:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest-xlarge]
-
+        os: [ubuntu-latest]
+        include:
+          - os: macos-latest-xlarge
+          - os: ubuntu-latest
+            container: "paritytech/ci-unified:bullseye-1.74.0-2023-11-01-v20231204"
+    runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container }}
     steps:
       - name: Free Disk Space (Ubuntu)
         if: matrix.os == 'ubuntu-latest'

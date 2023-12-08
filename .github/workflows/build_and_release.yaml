@@ -56,7 +56,7 @@ jobs:
         run: ./build_dist.sh
 
       # Push in the Github environment variable the name of the artifact
-      # Doing this now because in the following step the rust folder will be delated to save some space before installing the toolchain
+      # Doing this now because in the following step the rust folder will be deleted to save some space before installing the toolchain
       - run: ./config.sh -artifact_name
 
       # Build Toolchain
@@ -64,7 +64,7 @@ jobs:
         run: ./build_toolchain.sh
 
       # Create release
-      - name: Uplaod Release
+      - name: Upload Release
         uses: ncipollo/release-action@v1
         with:
           artifacts: "${{ env.ARTIFACT_NAME }}.tar.xz"

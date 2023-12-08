@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - release
-      - pg/fix-name
 
 permissions:
   contents: write

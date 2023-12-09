@@ -4,19 +4,23 @@ set -euo pipefail
 
 source config.sh
 
+# We generally remove files as soon as we don't need them
+# anymore to minimize disk space usage. Especially important for github runners
+# which don't have much space.
+
 inst () {
     echo "Installing: $1"
-    tar -xf ../$1.tar.xz
+    tar -xf ../$1.tar.gz
+    # eager remove to reduce max disk space used
+    rm ../$1.tar.gz
     cd $1
-    ./install.sh --disable-ldconfig --prefix="" --destdir="/tmp/destdir/$TOOLCHAIN_NAME"
+    ./install.sh --disable-ldconfig --prefix="" --destdir="/tmp/$TOOLCHAIN_NAME"
     cd ../
 }
 
-df -h
+# dist contains the tared components we want to install
 mv rust/build/dist .
-# remove rust to have some space to create the toolchain
-rm -r rust
-df -h
+rm -rf rust
 
 cd dist
 mkdir unpack
@@ -30,22 +34,17 @@ inst "rust-src-nightly"
 inst "rustfmt-nightly-$TOOLCHAIN_HOST_TRIPLET"
 inst "clippy-nightly-$TOOLCHAIN_HOST_TRIPLET"
 
-cd ../../
+cd ..
+rm -rf unpack
 
-# clean up the manifests and remove the install log
-sed -i'' -e "s#/tmp/destdir/$TOOLCHAIN_NAME/##g" /tmp/destdir/$TOOLCHAIN_NAME/lib/rustlib/manifest-*
-rm -f /tmp/destdir/$TOOLCHAIN_NAME/lib/rustlib/install.log
+cd ../
 
-# Create Artifact folder
-mkdir $FOLDER_NAME
-# copy toolchain
-cp -r /tmp/destdir/$TOOLCHAIN_NAME $FOLDER_NAME
+# remove the /tmp/ prefix from the manifest to make it path independent
+sed -i'' -e "s#/tmp/$TOOLCHAIN_NAME/##g" /tmp/$TOOLCHAIN_NAME/lib/rustlib/manifest-*
+rm -f /tmp/$TOOLCHAIN_NAME/lib/rustlib/install.log
 
-# Meta install
-sed -i'' -e "s#TOOLCHAIN_NAME_VARIABLE#$TOOLCHAIN_NAME#g" install.sh
+# the final toolchain tar that can just be extracted anywhere to install it
+tar --zstd -cf $ARTIFACT_NAME.tar.zst /tmp/$TOOLCHAIN_NAME
 
-# copy install script
-cp install.sh $FOLDER_NAME
-
-# compress the final artifact
-tar -zcf $ARTIFACT_NAME.tar.xz $FOLDER_NAME
+rm -rf dist
+rm -rf /tmp/$TOOLCHAIN_NAME

@@ -1,2 +1,3 @@
-rust
-unpack
+/rust
+/dist
+/*.tar.zst

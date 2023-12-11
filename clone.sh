@@ -4,8 +4,8 @@ set -euo pipefail
 
 source config.sh -rust_commit
 
-git clone "https://github.com/rust-lang/rust.git"
+git clone --depth 1 "https://github.com/rust-lang/rust.git"
 cd rust
-# This could change if the patch will be updated
-git checkout $RUST_COMMIT
-git submodule update --init --recursive
+git fetch --depth 1 origin $RUST_COMMIT
+git checkout FETCH_HEAD
+git submodule update --init --recursive --depth 1

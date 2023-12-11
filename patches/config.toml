@@ -18,6 +18,7 @@ remap-debuginfo = true
 new-symbol-mangling = true
 split-debuginfo = "off"
 
+# we gonna repack anyways so time spent on compression here is wasted
 [dist]
-compression-formats = ["xz"]
-compression-profile = "balanced"
+compression-formats = ["gz"]
+compression-profile = "fast"

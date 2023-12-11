@@ -25,11 +25,14 @@ else
   exit 1
 fi
 
-export TOOLCHAIN_NAME=rv32e-nightly-$rust_commit_date
-export TOOLCHAIN_VERSION=nightly-$rust_commit_date-r$(cat release_number)
-export TOOLCHAIN_VERSION_NAME=riscv32em-$TOOLCHAIN_VERSION-$TOOLCHAIN_HOST_TRIPLET
-export FOLDER_NAME=rust-riscv32em-$TOOLCHAIN_HOST_TRIPLET
-export ARTIFACT_NAME=rust-$TOOLCHAIN_VERSION_NAME
+# Toolchain itself does not need to be versioned by default. It makes referencing it from
+# various other projects harder while things are in development. Version can be queried by
+# calling `rustc --version anyways`. If someone needs to keep an older version they can 
+# always rename the folder at install time.
+export TOOLCHAIN_NAME=rve-nightly
+
+# Artifact name should be versioned as it is only used at install time.
+export ARTIFACT_NAME=rust-rve-nightly-$rust_commit_date-$TOOLCHAIN_HOST_TRIPLET
 
 if [ "$param1" == "-artifact_name" ]; then
     echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> $GITHUB_ENV

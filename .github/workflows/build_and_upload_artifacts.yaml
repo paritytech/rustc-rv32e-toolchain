@@ -68,4 +68,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: "${{ env.ARTIFACT_NAME }}"
-          path: "${{ env.ARTIFACT_NAME }}.tar.xz"
+          path: "${{ env.ARTIFACT_NAME }}.tar.zst"

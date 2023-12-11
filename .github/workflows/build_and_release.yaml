@@ -67,6 +67,6 @@ jobs:
       - name: Upload Release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "${{ env.ARTIFACT_NAME }}.tar.xz"
+          artifacts: "${{ env.ARTIFACT_NAME }}.tar.zst"
           tag: "${{ env.ARTIFACT_NAME }}"
           name: "${{ env.ARTIFACT_NAME }}"

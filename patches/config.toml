@@ -8,6 +8,7 @@ targets = "AArch64;RISCV;X86"
 compiler-docs = true
 docs = false
 locked-deps = true
+cargo-native-static = true
 
 [rust]
 channel = "nightly"

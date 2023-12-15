@@ -32,7 +32,7 @@ fi
 export TOOLCHAIN_NAME=rve-nightly
 
 # Artifact name should be versioned as it is only used at install time.
-export ARTIFACT_NAME=rust-rve-nightly-$rust_commit_date-$TOOLCHAIN_HOST_TRIPLET
+export ARTIFACT_NAME=rust-rve-nightly-1-$rust_commit_date-$TOOLCHAIN_HOST_TRIPLET
 
 if [ "$param1" == "-artifact_name" ]; then
     echo "ARTIFACT_NAME=$ARTIFACT_NAME" >> $GITHUB_ENV

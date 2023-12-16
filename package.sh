@@ -44,7 +44,7 @@ sed -i'' -e "s#/tmp/$TOOLCHAIN_NAME/##g" /tmp/$TOOLCHAIN_NAME/lib/rustlib/manife
 rm -f /tmp/$TOOLCHAIN_NAME/lib/rustlib/install.log
 
 # the final toolchain tar that can just be extracted anywhere to install it
-tar --zstd -cf $ARTIFACT_NAME.tar.zst /tmp/$TOOLCHAIN_NAME
+tar --zstd -cf $ARTIFACT_NAME.tar.zst -C /tmp $TOOLCHAIN_NAME
 
 rm -rf dist
 rm -rf /tmp/$TOOLCHAIN_NAME

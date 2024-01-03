@@ -3,7 +3,7 @@ name: Build and release artifacts
 on:
   push:
     branches:
-      - release
+      - main
 
 permissions:
   contents: write

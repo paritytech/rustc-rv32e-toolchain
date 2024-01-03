@@ -67,5 +67,5 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           draft: true
-          name: ${{ steps.version.outputs.VERSION }}
+          tag: ${{ steps.version.outputs.VERSION }}
           artifacts: "${{ env.ARTIFACT_NAME }}.tar.zst"

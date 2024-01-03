@@ -1,9 +1,9 @@
-name: Build and upload artifacts
+name: Build and release artifacts
 
 on:
   push:
     branches:
-      - main
+      - release
 
 permissions:
   contents: write
@@ -59,8 +59,9 @@ jobs:
       - name: Package toolchain
         run: ./package.sh
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+      - name: Release
+        uses: ncipollo/release-action@v1
         with:
+          artifacts: "${{ env.ARTIFACT_NAME }}.tar.zst"
+          tag: "${{ env.ARTIFACT_NAME }}"
           name: "${{ env.ARTIFACT_NAME }}"
-          path: "${{ env.ARTIFACT_NAME }}.tar.zst"

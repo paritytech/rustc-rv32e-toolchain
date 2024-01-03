@@ -31,6 +31,15 @@ jobs:
 
       - uses: actions/checkout@v4
 
+      - name: Set release version
+        id: version
+        run: echo "VERSION=$(cat version.txt)" >> "$GITHUB_OUTPUT"
+
+      - name: Print release version
+        env:
+          VERSION: ${{ steps.version.outputs.VERSION }}
+        run: echo "Current release is $VERSION"
+
       - name: Install ninja
         if: matrix.os == 'ubuntu-20.04'
         run: |
@@ -58,10 +67,6 @@ jobs:
 
       - name: Package toolchain
         run: ./package.sh
-
-      - name: Read version
-        id: version
-        run: echo "::set-output name=VERSION::$(cat version.txt)"
 
       - name: Release
         uses: ncipollo/release-action@v1

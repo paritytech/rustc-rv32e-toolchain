@@ -59,9 +59,13 @@ jobs:
       - name: Package toolchain
         run: ./package.sh
 
+      - name: Read version
+        id: version
+        run: echo "::set-output name=VERSION::$(cat version.txt)"
+
       - name: Release
         uses: ncipollo/release-action@v1
         with:
+          draft: true
+          name: ${{ steps.version.outputs.VERSION }}
           artifacts: "${{ env.ARTIFACT_NAME }}.tar.zst"
-          tag: "${{ env.ARTIFACT_NAME }}"
-          name: "${{ env.ARTIFACT_NAME }}"

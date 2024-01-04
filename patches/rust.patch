@@ -1,8 +1,8 @@
 diff --git a/compiler/rustc_codegen_ssa/src/back/metadata.rs b/compiler/rustc_codegen_ssa/src/back/metadata.rs
-index 4ab56699922..2558dd12a9e 100644
+index cb60ed72..6e798d62 100644
 --- a/compiler/rustc_codegen_ssa/src/back/metadata.rs
 +++ b/compiler/rustc_codegen_ssa/src/back/metadata.rs
-@@ -181,6 +181,12 @@ pub(crate) fn create_object_file(sess: &Session) -> Option<write::Object<'static
+@@ -307,6 +307,12 @@ pub(crate) fn create_object_file(sess: &Session) -> Option<write::Object<'static
                  e_flags |= elf::EF_RISCV_RVC;
              }
  
@@ -12,16 +12,16 @@ index 4ab56699922..2558dd12a9e 100644
 +                e_flags |= EF_RISCV_RVE;
 +            }
 +
-             // Select the appropriate floating-point ABI
-             if features.contains("+d") {
-                 e_flags |= elf::EF_RISCV_FLOAT_ABI_DOUBLE;
+             // Set the appropriate flag based on ABI
+             // This needs to match LLVM `RISCVELFStreamer.cpp`
+             match &*sess.target.llvm_abiname {
 diff --git a/compiler/rustc_target/src/spec/mod.rs b/compiler/rustc_target/src/spec/mod.rs
-index bb45fb125b2..c0c651985d9 100644
+index f0479948..2af9f501 100644
 --- a/compiler/rustc_target/src/spec/mod.rs
 +++ b/compiler/rustc_target/src/spec/mod.rs
-@@ -1195,6 +1195,7 @@ fn $module() {
-     ("aarch64-unknown-hermit", aarch64_unknown_hermit),
-     ("x86_64-unknown-hermit", x86_64_unknown_hermit),
+@@ -1635,6 +1635,7 @@ fn $module() {
+ 
+     ("x86_64-unikraft-linux-musl", x86_64_unikraft_linux_musl),
  
 +    ("riscv32em-unknown-none-elf", riscv32em_unknown_none_elf),
      ("riscv32i-unknown-none-elf", riscv32i_unknown_none_elf),
@@ -29,7 +29,7 @@ index bb45fb125b2..c0c651985d9 100644
      ("riscv32imc-unknown-none-elf", riscv32imc_unknown_none_elf),
 diff --git a/compiler/rustc_target/src/spec/riscv32em_unknown_none_elf.rs b/compiler/rustc_target/src/spec/riscv32em_unknown_none_elf.rs
 new file mode 100644
-index 00000000000..0304eb394c4
+index 00000000..0304eb39
 --- /dev/null
 +++ b/compiler/rustc_target/src/spec/riscv32em_unknown_none_elf.rs
 @@ -0,0 +1,25 @@

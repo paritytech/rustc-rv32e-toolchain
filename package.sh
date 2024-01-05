@@ -29,6 +29,8 @@ cd unpack
 inst "rustc-nightly-$TOOLCHAIN_HOST_TRIPLET"
 inst "rust-std-nightly-$TOOLCHAIN_HOST_TRIPLET"
 inst "rust-std-nightly-riscv32em-unknown-none-elf"
+inst "rust-std-nightly-riscv32ema-unknown-none-elf"
+inst "rust-std-nightly-riscv64ema-unknown-none-elf"
 inst "cargo-nightly-$TOOLCHAIN_HOST_TRIPLET"
 inst "rust-src-nightly"
 inst "rustfmt-nightly-$TOOLCHAIN_HOST_TRIPLET"

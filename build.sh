@@ -6,4 +6,4 @@ source config.sh
 
 # Will create component archives (dists) ./rust/build/dist
 cd rust
-./x dist rustc rust-std cargo rust-src rustfmt clippy --target $TOOLCHAIN_HOST_TRIPLET --target riscv32em-unknown-none-elf
+./x dist rustc rust-std cargo rust-src rustfmt clippy --target $TOOLCHAIN_HOST_TRIPLET,riscv32em-unknown-none-elf,riscv32ema-unknown-none-elf,riscv64ema-unknown-none-elf

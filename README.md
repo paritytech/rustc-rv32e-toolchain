@@ -2,20 +2,22 @@
 
 This repository compile and publish as release final binaries of the Rust toolchain targetting RISC-V RV32E.
 
-## Compiling
+## Building
 
 ```sh
 ./clone.sh
+./patch.sh
 ./build.sh
 ./package.sh
 ```
 
-Executing those steps will create a `rust-rve-nightly-$rust_commit_date-$TOOLCHAIN_HOST_TRIPLET.xz` in your working directory.
-
+Executing those steps will create a `rust-rve-nightly-$rust_commit_date-$TOOLCHAIN_HOST_TRIPLET.xz` in your working directory. See the next chapter about installation how to use this
+toolchain with rustup.
 
 ## Installation
 
-You can either download a package from the release page or build it yourself with the instructions above.
+You can either download a package from the release page or build it yourself with the instructions above. The following steps will make the toolchain available via rustup's
+`+rve-nightly` syntax.
 
 ``` sh
 tar --zstd -xf rust-rve-nightly-$rust_commit_date-$TOOLCHAIN_HOST_TRIPLET.xz

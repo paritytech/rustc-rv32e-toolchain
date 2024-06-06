@@ -16,11 +16,11 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-20.04, macos-12-xl, macos-latest-xlarge]
+        os: [ubuntu-latest, macos-latest]
 
     steps:
       - name: Free Disk Space (Ubuntu)
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-latest'
         uses: jlumbroso/free-disk-space@main
         with:
           tool-cache: true
@@ -43,7 +43,7 @@ jobs:
         run: echo "Current release is $VERSION"
 
       - name: Install ninja
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt update
           sudo apt-get -y install ninja-build

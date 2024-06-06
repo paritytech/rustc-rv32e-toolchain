@@ -1,15 +1,15 @@
 diff --git a/compiler/rustc_target/src/spec/mod.rs b/compiler/rustc_target/src/spec/mod.rs
-index 9d25388b90f..c37d623e58a 100644
+index 6c698c5b0..357cd0e3e 100644
 --- a/compiler/rustc_target/src/spec/mod.rs
 +++ b/compiler/rustc_target/src/spec/mod.rs
-@@ -1596,6 +1596,8 @@ fn $module() {
+@@ -1596,6 +1596,7 @@ fn $module() {
 
      ("x86_64-unikraft-linux-musl", x86_64_unikraft_linux_musl),
 
 +    ("riscv32em-athena-zkvm-elf", riscv32em_athena_zkvm_elf),
      ("riscv32i-unknown-none-elf", riscv32i_unknown_none_elf),
+     ("riscv32im-risc0-zkvm-elf", riscv32im_risc0_zkvm_elf),
      ("riscv32im-unknown-none-elf", riscv32im_unknown_none_elf),
-     ("riscv32imc-unknown-none-elf", riscv32imc_unknown_none_elf),
 diff --git a/compiler/rustc_target/src/spec/targets/riscv32em_athena_zkvm_elf.rs b/compiler/rustc_target/src/spec/targets/riscv32em_athena_zkvm_elf.rs
 new file mode 100644
 index 00000000000..0304eb394c4

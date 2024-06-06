@@ -87,7 +87,7 @@ index d8739ee3824..759beb2d306 100644
 
  pub fn setenv(_: &OsStr, _: &OsStr) -> io::Result<()> {
 diff --git a/library/std/src/sys/pal/zkvm/mod.rs b/library/std/src/sys/pal/zkvm/mod.rs
-index 62f0a2c7b1c..4f79f8c4961 100644
+index 7f221dc4fd9..ebdcb6abbdb 100644
 --- a/library/std/src/sys/pal/zkvm/mod.rs
 +++ b/library/std/src/sys/pal/zkvm/mod.rs
 @@ -12,8 +12,6 @@
@@ -99,4 +99,12 @@ index 62f0a2c7b1c..4f79f8c4961 100644
  pub mod env;
  #[path = "../unsupported/fs.rs"]
  pub mod fs;
-
+@@ -24,8 +22,6 @@
+ #[path = "../unsupported/once.rs"]
+ pub mod once;
+ pub mod os;
+-#[path = "../unix/os_str.rs"]
+-pub mod os_str;
+ #[path = "../unix/path.rs"]
+ pub mod path;
+ #[path = "../unsupported/pipe.rs"]

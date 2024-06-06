@@ -2,7 +2,7 @@
 
 param1=${1:-}
 
-export RUST_COMMIT=5113ed28ea1451a13eae3a05dca0dbabfd56f587
+export RUST_COMMIT=aedd173a2c086e558c2b66d3743b344f977621a7
 
 # If -rust_commit specified then only export the rust commit variable
 if [ "$param1" == "-rust_commit" ]; then
@@ -27,7 +27,7 @@ fi
 
 # Toolchain itself does not need to be versioned by default. It makes referencing it from
 # various other projects harder while things are in development. Version can be queried by
-# calling `rustc --version anyways`. If someone needs to keep an older version they can 
+# calling `rustc --version anyways`. If someone needs to keep an older version they can
 # always rename the folder at install time.
 export TOOLCHAIN_NAME=rve-nightly
 

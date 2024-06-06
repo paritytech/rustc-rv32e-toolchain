@@ -5,11 +5,11 @@ index d55ab7639..5f536836b 100644
 @@ -148,7 +148,7 @@ void RISCVTargetInfo::getTargetDefines(const LangOptions &Opts,
    else
      Builder.defineMacro("__riscv_float_abi_soft");
- 
+
 -  if (ABIName == "ilp32e")
 +  if (ABIName == "ilp32e" || ABIName == "lp64e")
      Builder.defineMacro("__riscv_abi_rve");
- 
+
    Builder.defineMacro("__riscv_arch_test");
 @@ -204,6 +204,13 @@ void RISCVTargetInfo::getTargetDefines(const LangOptions &Opts,
    if (VScale && VScale->first && VScale->first == VScale->second)
@@ -23,12 +23,12 @@ index d55ab7639..5f536836b 100644
 +      Builder.defineMacro("__riscv_32e");
 +  }
  }
- 
+
  static constexpr Builtin::Info BuiltinInfo[] = {
 @@ -322,6 +329,11 @@ bool RISCVTargetInfo::handleTargetFeatures(std::vector<std::string> &Features,
    if (ISAInfo->hasExtension("zfh") || ISAInfo->hasExtension("zhinx"))
      HasLegalHalfType = true;
- 
+
 +  if (ABI == "ilp32e" && ISAInfo->hasExtension("d")) {
 +    Diags.Report(diag::err_invalid_feature_combination)
 +        << "ILP32E cannot be used with the D ISA extension";
@@ -36,37 +36,7 @@ index d55ab7639..5f536836b 100644
 +  }
    return true;
  }
- 
-diff --git a/clang/lib/Basic/Targets/RISCV.h b/clang/lib/Basic/Targets/RISCV.h
-index e4e39506b..25eb9bc1d 100644
---- a/clang/lib/Basic/Targets/RISCV.h
-+++ b/clang/lib/Basic/Targets/RISCV.h
-@@ -121,6 +121,12 @@ public:
-   }
- 
-   bool setABI(const std::string &Name) override {
-+    if (Name == "ilp32e") {
-+      ABI = Name;
-+      resetDataLayout("e-m:e-p:32:32-i64:64-n32-S32");
-+      return true;
-+    }
-+
-     if (Name == "ilp32" || Name == "ilp32f" || Name == "ilp32d") {
-       ABI = Name;
-       return true;
-@@ -145,6 +151,12 @@ public:
-   }
- 
-   bool setABI(const std::string &Name) override {
-+    if (Name == "lp64e") {
-+      ABI = Name;
-+      resetDataLayout("e-m:e-p:64:64-i64:64-i128:128-n32:64-S64");
-+      return true;
-+    }
-+
-     if (Name == "lp64" || Name == "lp64f" || Name == "lp64d") {
-       ABI = Name;
-       return true;
+
 diff --git a/clang/lib/CodeGen/CodeGenModule.cpp b/clang/lib/CodeGen/CodeGenModule.cpp
 index f09d1129b..5b251dbe6 100644
 --- a/clang/lib/CodeGen/CodeGenModule.cpp
@@ -79,7 +49,7 @@ index f09d1129b..5b251dbe6 100644
 +    bool EABI = ABIStr.endswith("e");
 +    return createRISCVTargetCodeGenInfo(CGM, XLen, ABIFLen, EABI);
    }
- 
+
    case llvm::Triple::systemz: {
 diff --git a/clang/lib/CodeGen/TargetInfo.h b/clang/lib/CodeGen/TargetInfo.h
 index 14ed5e5d2..05d4e0426 100644
@@ -87,12 +57,12 @@ index 14ed5e5d2..05d4e0426 100644
 +++ b/clang/lib/CodeGen/TargetInfo.h
 @@ -493,7 +493,8 @@ createPPC64_SVR4_TargetCodeGenInfo(CodeGenModule &CGM, PPC64_SVR4_ABIKind Kind,
                                     bool SoftFloatABI);
- 
+
  std::unique_ptr<TargetCodeGenInfo>
 -createRISCVTargetCodeGenInfo(CodeGenModule &CGM, unsigned XLen, unsigned FLen);
 +createRISCVTargetCodeGenInfo(CodeGenModule &CGM, unsigned XLen, unsigned FLen,
 +                             bool EABI);
- 
+
  std::unique_ptr<TargetCodeGenInfo>
  createCommonSPIRTargetCodeGenInfo(CodeGenModule &CGM);
 diff --git a/clang/lib/CodeGen/Targets/RISCV.cpp b/clang/lib/CodeGen/Targets/RISCV.cpp
@@ -113,7 +83,7 @@ index b12c3025f..207dd6036 100644
                                        CharUnits &Field1Off,
 @@ -34,8 +35,10 @@ private:
                                        CharUnits &Field2Off) const;
- 
+
  public:
 -  RISCVABIInfo(CodeGen::CodeGenTypes &CGT, unsigned XLen, unsigned FLen)
 -      : DefaultABIInfo(CGT), XLen(XLen), FLen(FLen) {}
@@ -121,17 +91,17 @@ index b12c3025f..207dd6036 100644
 +               bool EABI)
 +      : DefaultABIInfo(CGT), XLen(XLen), FLen(FLen), NumArgGPRs(EABI ? 6 : 8),
 +        NumArgFPRs(FLen != 0 ? 8 : 0), EABI(EABI) {}
- 
+
    // DefaultABIInfo's classifyReturnType and classifyArgumentType are
    // non-virtual, but computeInfo is virtual, so we overload it.
 @@ -86,7 +89,7 @@ void RISCVABIInfo::computeInfo(CGFunctionInfo &FI) const {
    }
- 
+
    int ArgGPRsLeft = IsRetIndirect ? NumArgGPRs - 1 : NumArgGPRs;
 -  int ArgFPRsLeft = FLen ? NumArgFPRs : 0;
 +  int ArgFPRsLeft = NumArgFPRs;
    int NumFixedArgs = FI.getNumRequiredArgs();
- 
+
    int ArgNum = 0;
 @@ -396,9 +399,12 @@ ABIArgInfo RISCVABIInfo::classifyArgumentType(QualType Ty, bool IsFixed,
    // Determine the number of GPRs needed to pass the current argument
@@ -146,11 +116,11 @@ index b12c3025f..207dd6036 100644
 +    NeededArgGPRs = 2 + (EABI && XLen == 32 ? 0 : (ArgGPRsLeft % 2));
    else if (Size > XLen && Size <= 2 * XLen)
      NeededArgGPRs = 2;
- 
+
 @@ -480,6 +486,13 @@ Address RISCVABIInfo::EmitVAArg(CodeGenFunction &CGF, Address VAListAddr,
- 
+
    auto TInfo = getContext().getTypeInfoInChars(Ty);
- 
+
 +  // TODO: To be compatible with GCC's behaviors, we force arguments with
 +  // 2×XLEN-bit alignment and size at most 2×XLEN bits like `long long`,
 +  // `unsigned long long` and `double` to have 4-byte alignment. This
@@ -160,7 +130,7 @@ index b12c3025f..207dd6036 100644
 +
    // Arguments bigger than 2*Xlen bytes are passed indirectly.
    bool IsIndirect = TInfo.Width > 2 * SlotSize;
- 
+
 @@ -499,8 +512,9 @@ namespace {
  class RISCVTargetCodeGenInfo : public TargetCodeGenInfo {
  public:
@@ -170,11 +140,11 @@ index b12c3025f..207dd6036 100644
 +                         unsigned FLen, bool EABI)
 +      : TargetCodeGenInfo(
 +            std::make_unique<RISCVABIInfo>(CGT, XLen, FLen, EABI)) {}
- 
+
    void setTargetAttributes(const Decl *D, llvm::GlobalValue *GV,
                             CodeGen::CodeGenModule &CGM) const override {
 @@ -526,6 +540,7 @@ public:
- 
+
  std::unique_ptr<TargetCodeGenInfo>
  CodeGen::createRISCVTargetCodeGenInfo(CodeGenModule &CGM, unsigned XLen,
 -                                      unsigned FLen) {
@@ -194,7 +164,7 @@ index 17e1aab96..2e88d706d 100644
 +  // rv64e -> lp64e
    // rv64* -> lp64
    StringRef Arch = getRISCVArch(Args, Triple);
- 
+
 @@ -283,6 +284,7 @@ StringRef riscv::getRISCVArch(const llvm::opt::ArgList &Args,
    // 3. Choose a default based on `-mabi=`
    //
@@ -204,7 +174,7 @@ index 17e1aab96..2e88d706d 100644
    // lp64 | lp64f | lp64d -> rv64imafdc
    if (const Arg *A = Args.getLastArg(options::OPT_mabi_EQ)) {
 @@ -290,6 +292,8 @@ StringRef riscv::getRISCVArch(const llvm::opt::ArgList &Args,
- 
+
      if (MABI.equals_insensitive("ilp32e"))
        return "rv32e";
 +    else if (MABI.equals_insensitive("lp64e"))
@@ -222,12 +192,12 @@ index 040ae500f..3645e15cc 100644
  // RUN:   | FileCheck -check-prefixes=ILP32-ILP32F-ILP32D,ILP32F-ILP32D,ILP32D %s
 +// RUN: %clang_cc1 -triple riscv32 -emit-llvm -target-abi ilp32e %s -o - \
 +// RUN:     | FileCheck -check-prefixes=ILP32-ILP32F-ILP32D,ILP32-ILP32F,ILP32,ILP32E %s
- 
+
  #include <stddef.h>
  #include <stdint.h>
 @@ -2064,4 +2066,5 @@ union float16_u f_ret_float16_u(void) {
  }
- 
+
  //// NOTE: These prefixes are unused and the list is autogenerated. Do not add tests below this line:
 +// ILP32E: {{.*}}
  // ILP32F: {{.*}}
@@ -256,13 +226,13 @@ index 02b1ed38e..1c4e41f2f 100644
 +// RUN:     | FileCheck %s -check-prefixes=CHECK,CHECK-ILP32D
 +// RUN: %clang_cc1 -triple riscv32 -target-abi ilp32e -emit-llvm %s -o - \
 +// RUN:     | FileCheck %s -check-prefixes=CHECK,CHECK-ILP32E
- 
+
  #include <stddef.h>
  #include <stdint.h>
 @@ -102,24 +104,60 @@ int f_va_1(char *fmt, ...) {
  // used to pass varargs with 2x xlen alignment and 2x xlen size. Ensure the
  // correct offsets are used.
- 
+
 -// CHECK-LABEL: define dso_local double @f_va_2
 -// CHECK-SAME: (ptr noundef [[FMT:%.*]], ...) #[[ATTR0]] {
 -// CHECK-NEXT:  entry:
@@ -339,9 +309,9 @@ index 02b1ed38e..1c4e41f2f 100644
  double f_va_2(char *fmt, ...) {
    __builtin_va_list va;
 @@ -133,40 +171,106 @@ double f_va_2(char *fmt, ...) {
- 
+
  // Two "aligned" register pairs.
- 
+
 -// CHECK-LABEL: define dso_local double @f_va_3
 -// CHECK-SAME: (ptr noundef [[FMT:%.*]], ...) #[[ATTR0]] {
 -// CHECK-NEXT:  entry:
@@ -482,7 +452,7 @@ index 02b1ed38e..1c4e41f2f 100644
 @@ -180,93 +284,269 @@ double f_va_3(char *fmt, ...) {
    return v + x;
  }
- 
+
 -// CHECK-LABEL: define dso_local i32 @f_va_4
 -// CHECK-SAME: (ptr noundef [[FMT:%.*]], ...) #[[ATTR0]] {
 -// CHECK-NEXT:  entry:
@@ -846,13 +816,13 @@ index 8c857f86d..209dc95d9 100644
  // RUN:   | FileCheck -check-prefixes=LP64-LP64F-LP64D,LP64F-LP64D,LP64D %s
 +// RUN: %clang_cc1 -triple riscv64 -emit-llvm -target-abi lp64e %s -o - \
 +// RUN:     | FileCheck -check-prefixes=LP64-LP64F-LP64D,LP64-LP64F,LP64,LP64E %s
- 
+
  #include <stddef.h>
  #include <stdint.h>
 @@ -2046,3 +2048,5 @@ union float16_u f_ret_float16_u(void) {
    return (union float16_u){1.0};
  }
- 
+
 +//// NOTE: These prefixes are unused and the list is autogenerated. Do not add tests below this line:
 +// LP64E: {{.*}}
 diff --git a/clang/test/CodeGen/RISCV/riscv64-vararg.c b/clang/test/CodeGen/RISCV/riscv64-vararg.c
@@ -865,7 +835,7 @@ index 26261f009..634cde613 100644
  // RUN:     | FileCheck %s
 +// RUN: %clang_cc1 -triple riscv64 -target-abi lp64e -emit-llvm %s -o - \
 +// RUN:     | FileCheck %s
- 
+
  #include <stddef.h>
  #include <stdint.h>
 diff --git a/llvm/docs/RISCVUsage.rst b/llvm/docs/RISCVUsage.rst
@@ -883,14 +853,14 @@ index 86da02b4d..a2d4ea35c 100644
 @@ -159,6 +160,11 @@ Assembly Support
  Supported
    Fully supported by the compiler.  This includes everything in Assembly Support, along with - if relevant - C language intrinsics for the instructions and pattern matching by the compiler to recognize idiomatic patterns which can be lowered to the associated instructions.
- 
+
 +.. _riscv-rve-note:
 +
 +``E``
 +  Support of RV32E/RV64E and ilp32e/lp64e ABIs are experimental.
 +
  .. _riscv-scalar-crypto-note1:
- 
+
  ``Zbkb``, ``Zbkx``
 diff --git a/llvm/include/llvm/Support/RISCVAttributes.h b/llvm/include/llvm/Support/RISCVAttributes.h
 index a8ce8f4d8..8643debb7 100644
@@ -899,18 +869,18 @@ index a8ce8f4d8..8643debb7 100644
 @@ -34,7 +34,7 @@ enum AttrType : unsigned {
    PRIV_SPEC_REVISION = 12,
  };
- 
+
 -enum StackAlign { ALIGN_4 = 4, ALIGN_16 = 16 };
 +enum StackAlign { ALIGN_4 = 4, ALIGN_8 = 8, ALIGN_16 = 16 };
- 
+
  enum { NOT_ALLOWED = 0, ALLOWED = 1 };
- 
+
 diff --git a/llvm/lib/Support/RISCVISAInfo.cpp b/llvm/lib/Support/RISCVISAInfo.cpp
 index 70fab8010..8ed538012 100644
 --- a/llvm/lib/Support/RISCVISAInfo.cpp
 +++ b/llvm/lib/Support/RISCVISAInfo.cpp
 @@ -1237,16 +1237,16 @@ RISCVISAInfo::postProcessAndChecking(std::unique_ptr<RISCVISAInfo> &&ISAInfo) {
- 
+
  StringRef RISCVISAInfo::computeDefaultABI() const {
    if (XLen == 32) {
 -    if (hasExtension("d"))
@@ -937,7 +907,7 @@ index 0a42c6fae..76dbcd45e 100644
 @@ -69,6 +69,11 @@ ABI computeTargetABI(const Triple &TT, const FeatureBitset &FeatureBits,
      TargetABI = ABI_Unknown;
    }
- 
+
 +  if ((TargetABI == RISCVABI::ABI::ABI_ILP32E ||
 +       (TargetABI == ABI_Unknown && IsRVE && !IsRV64)) &&
 +      FeatureBits[RISCV::FeatureStdExtD])
@@ -945,13 +915,13 @@ index 0a42c6fae..76dbcd45e 100644
 +
    if (TargetABI != ABI_Unknown)
      return TargetABI;
- 
+
 diff --git a/llvm/lib/Target/RISCV/MCTargetDesc/RISCVTargetStreamer.cpp b/llvm/lib/Target/RISCV/MCTargetDesc/RISCVTargetStreamer.cpp
 index 29ffc3224..3b87e24e5 100644
 --- a/llvm/lib/Target/RISCV/MCTargetDesc/RISCVTargetStreamer.cpp
 +++ b/llvm/lib/Target/RISCV/MCTargetDesc/RISCVTargetStreamer.cpp
 @@ -50,11 +50,14 @@ void RISCVTargetStreamer::setTargetABI(RISCVABI::ABI ABI) {
- 
+
  void RISCVTargetStreamer::emitTargetAttributes(const MCSubtargetInfo &STI,
                                                 bool EmitStackAlign) {
 -  if (STI.hasFeature(RISCV::FeatureRVE))
@@ -967,7 +937,7 @@ index 29ffc3224..3b87e24e5 100644
 +    else
 +      emitAttribute(RISCVAttrs::STACK_ALIGN, RISCVAttrs::ALIGN_16);
 +  }
- 
+
    auto ParseResult = RISCVFeatures::parseFeatureBits(
        STI.hasFeature(RISCV::Feature64Bit), STI.getFeatureBits());
 diff --git a/llvm/lib/Target/RISCV/RISCVCallingConv.td b/llvm/lib/Target/RISCV/RISCVCallingConv.td
@@ -977,13 +947,13 @@ index 130a6ecc1..9b1f68829 100644
 @@ -13,8 +13,10 @@
  // The RISC-V calling convention is handled with custom code in
  // RISCVISelLowering.cpp (CC_RISCV).
- 
+
 +def CSR_ILP32E_LP64E : CalleeSavedRegs<(add X1, X8, X9)>;
 +
  def CSR_ILP32_LP64
 -    : CalleeSavedRegs<(add X1, X3, X4, X8, X9, (sequence "X%u", 18, 27))>;
 +    : CalleeSavedRegs<(add CSR_ILP32E_LP64E, (sequence "X%u", 18, 27))>;
- 
+
  def CSR_ILP32F_LP64F
      : CalleeSavedRegs<(add CSR_ILP32_LP64,
 @@ -38,3 +40,14 @@ def CSR_XLEN_F32_Interrupt: CalleeSavedRegs<(add CSR_Interrupt,
@@ -1008,7 +978,7 @@ index 4ce9c41ea..1fdd6a9f8 100644
 @@ -17,6 +17,13 @@ def HasStdExtZicsr : Predicate<"Subtarget->hasStdExtZicsr()">,
                                  AssemblerPredicate<(all_of FeatureStdExtZicsr),
                                  "'Zicsr' (CSRs)">;
- 
+
 +def FeatureStdExtI
 +    : SubtargetFeature<"i", "HasStdExtI", "true",
 +                       "'I' (Base Integer Instruction Set)">;
@@ -1024,9 +994,9 @@ index f312cc812..9230ecd9c 100644
 --- a/llvm/lib/Target/RISCV/RISCVFrameLowering.cpp
 +++ b/llvm/lib/Target/RISCV/RISCVFrameLowering.cpp
 @@ -27,6 +27,21 @@
- 
+
  using namespace llvm;
- 
+
 +static Align getABIStackAlignment(RISCVABI::ABI ABI) {
 +  if (ABI == RISCVABI::ABI_ILP32E)
 +    return Align(4);
@@ -1059,26 +1029,26 @@ index f312cc812..9230ecd9c 100644
 +        alignTo((STI.getXLen() / 8) * LibCallRegs, getStackAlign());
      RVFI->setLibCallStackSize(LibCallFrameSize);
    }
- 
+
 @@ -986,6 +1003,7 @@ void RISCVFrameLowering::determineCalleeSaves(MachineFunction &MF,
    // unconditionally save all Caller-saved registers and
    // all FP registers, regardless whether they are used.
    MachineFrameInfo &MFI = MF.getFrameInfo();
 +  auto &Subtarget = MF.getSubtarget<RISCVSubtarget>();
- 
+
    if (MF.getFunction().hasFnAttribute("interrupt") && MFI.hasCalls()) {
- 
+
 @@ -997,9 +1015,10 @@ void RISCVFrameLowering::determineCalleeSaves(MachineFunction &MF,
      };
- 
+
      for (unsigned i = 0; CSRegs[i]; ++i)
 -      SavedRegs.set(CSRegs[i]);
 +      if (CSRegs[i] < RISCV::X16 || !Subtarget.isRVE())
 +        SavedRegs.set(CSRegs[i]);
- 
+
 -    if (MF.getSubtarget<RISCVSubtarget>().hasStdExtF()) {
 +    if (Subtarget.hasStdExtF()) {
- 
+
        // If interrupt is enabled, this list contains all FP registers.
        const MCPhysReg * Regs = MF.getRegInfo().getCalleeSavedRegs();
 diff --git a/llvm/lib/Target/RISCV/RISCVFrameLowering.h b/llvm/lib/Target/RISCV/RISCVFrameLowering.h
@@ -1086,7 +1056,7 @@ index 79adc83e8..f62e77e35 100644
 --- a/llvm/lib/Target/RISCV/RISCVFrameLowering.h
 +++ b/llvm/lib/Target/RISCV/RISCVFrameLowering.h
 @@ -21,12 +21,7 @@ class RISCVSubtarget;
- 
+
  class RISCVFrameLowering : public TargetFrameLowering {
  public:
 -  explicit RISCVFrameLowering(const RISCVSubtarget &STI)
@@ -1096,7 +1066,7 @@ index 79adc83e8..f62e77e35 100644
 -                            /*TransientStackAlignment=*/Align(16)),
 -        STI(STI) {}
 +  explicit RISCVFrameLowering(const RISCVSubtarget &STI);
- 
+
    void emitPrologue(MachineFunction &MF, MachineBasicBlock &MBB) const override;
    void emitEpilogue(MachineFunction &MF, MachineBasicBlock &MBB) const override;
 diff --git a/llvm/lib/Target/RISCV/RISCVISelLowering.cpp b/llvm/lib/Target/RISCV/RISCVISelLowering.cpp
@@ -1106,13 +1076,13 @@ index f030982cb..bf3bbbc94 100644
 @@ -77,9 +77,6 @@ RISCVTargetLowering::RISCVTargetLowering(const TargetMachine &TM,
                                           const RISCVSubtarget &STI)
      : TargetLowering(TM), Subtarget(STI) {
- 
+
 -  if (Subtarget.isRVE())
 -    report_fatal_error("Codegen not yet implemented for RVE");
 -
    RISCVABI::ABI ABI = Subtarget.getTargetABI();
    assert(ABI != RISCVABI::ABI_Unknown && "Improperly initialised target ABI");
- 
+
 @@ -101,6 +98,8 @@ RISCVTargetLowering::RISCVTargetLowering(const TargetMachine &TM,
    default:
      report_fatal_error("Don't know how to lower this ABI");
@@ -1125,7 +1095,7 @@ index f030982cb..bf3bbbc94 100644
 @@ -14604,10 +14603,41 @@ void RISCVTargetLowering::AdjustInstrPostInstrSelection(MachineInstr &MI,
  // register-size fields in the same situations they would be for fixed
  // arguments.
- 
+
 -static const MCPhysReg ArgGPRs[] = {
 -  RISCV::X10, RISCV::X11, RISCV::X12, RISCV::X13,
 -  RISCV::X14, RISCV::X15, RISCV::X16, RISCV::X17
@@ -1208,7 +1178,7 @@ index f030982cb..bf3bbbc94 100644
 @@ -14759,6 +14798,8 @@ bool RISCV::CC_RISCV(const DataLayout &DL, RISCVABI::ABI ABI, unsigned ValNo,
      LocInfo = CCValAssign::BCvt;
    }
- 
+
 +  ArrayRef<MCPhysReg> ArgGPRs = RISCV::getArgGPRs(ABI);
 +
    // If this is a variadic argument, the RISC-V calling convention requires
@@ -1239,7 +1209,7 @@ index f030982cb..bf3bbbc94 100644
 +        XLen, State, VA, AF, ValNo, ValVT, LocVT, ArgFlags,
 +        ABI == RISCVABI::ABI_ILP32E || ABI == RISCVABI::ABI_LP64E);
    }
- 
+
    // Allocate to a register if possible, or else a stack slot.
 @@ -15156,15 +15202,8 @@ bool RISCV::CC_RISCV_FastCC(const DataLayout &DL, RISCVABI::ABI ABI,
                              bool IsFixed, bool IsRet, Type *OrigTy,
@@ -1287,7 +1257,7 @@ index f030982cb..bf3bbbc94 100644
                           "(Zdinx/D) instruction set extensions");
 @@ -15428,7 +15469,7 @@ SDValue RISCVTargetLowering::LowerFormalArguments(
      MF.getInfo<RISCVMachineFunctionInfo>()->setIsVectorCall();
- 
+
    if (IsVarArg) {
 -    ArrayRef<MCPhysReg> ArgRegs = ArrayRef(ArgGPRs);
 +    ArrayRef<MCPhysReg> ArgRegs = RISCV::getArgGPRs(Subtarget.getTargetABI());
@@ -1297,7 +1267,7 @@ index f030982cb..bf3bbbc94 100644
 @@ -15582,9 +15623,11 @@ SDValue RISCVTargetLowering::LowerCall(CallLoweringInfo &CLI,
    SmallVector<CCValAssign, 16> ArgLocs;
    CCState ArgCCInfo(CallConv, IsVarArg, MF, ArgLocs, *DAG.getContext());
- 
+
 -  if (CallConv == CallingConv::GHC)
 +  if (CallConv == CallingConv::GHC) {
 +    if (Subtarget.isRVE())
@@ -1310,7 +1280,7 @@ index f030982cb..bf3bbbc94 100644
                                                      : RISCV::CC_RISCV);
 @@ -15850,6 +15893,7 @@ SDValue RISCVTargetLowering::LowerCall(CallLoweringInfo &CLI,
      Glue = RetValue.getValue(2);
- 
+
      if (VA.getLocVT() == MVT::i32 && VA.getValVT() == MVT::f64) {
 +      ArrayRef<MCPhysReg> ArgGPRs = RISCV::getArgGPRs(Subtarget.getTargetABI());
        assert(VA.getLocReg() == ArgGPRs[0] && "Unexpected reg assignment");
@@ -1328,7 +1298,7 @@ index 164ded95a..8ad016d3d 100644
 +ArrayRef<MCPhysReg> getArgGPRs(const RISCVABI::ABI ABI);
 +
  } // end namespace RISCV
- 
+
  namespace RISCVVIntrinsicsTable {
 diff --git a/llvm/lib/Target/RISCV/RISCVRegisterInfo.cpp b/llvm/lib/Target/RISCV/RISCVRegisterInfo.cpp
 index c3ba4c1e7..1d5b9d8d2 100644
@@ -1345,7 +1315,7 @@ index c3ba4c1e7..1d5b9d8d2 100644
 +    return Subtarget.isRVE() ? CSR_Interrupt_RVE_SaveList
 +                             : CSR_Interrupt_SaveList;
    }
- 
+
    switch (Subtarget.getTargetABI()) {
    default:
      llvm_unreachable("Unrecognized ABI");
@@ -1357,23 +1327,23 @@ index c3ba4c1e7..1d5b9d8d2 100644
      return CSR_ILP32_LP64_SaveList;
 @@ -82,12 +87,13 @@ RISCVRegisterInfo::getCalleeSavedRegs(const MachineFunction *MF) const {
  }
- 
+
  BitVector RISCVRegisterInfo::getReservedRegs(const MachineFunction &MF) const {
 +  const RISCVSubtarget &STI = MF.getSubtarget<RISCVSubtarget>();
    const RISCVFrameLowering *TFI = getFrameLowering(MF);
    BitVector Reserved(getNumRegs());
- 
+
    // Mark any registers requested to be reserved as such
    for (size_t Reg = 0; Reg < getNumRegs(); Reg++) {
 -    if (MF.getSubtarget<RISCVSubtarget>().isRegisterReservedByUser(Reg))
 +    if (STI.isRegisterReservedByUser(Reg))
        markSuperRegs(Reserved, Reg);
    }
- 
+
 @@ -107,6 +113,11 @@ BitVector RISCVRegisterInfo::getReservedRegs(const MachineFunction &MF) const {
    // beginning with 'x0' for instructions that take register pairs.
    markSuperRegs(Reserved, RISCV::DUMMY_REG_PAIR_WITH_X0);
- 
+
 +  // There are only 16 GPRs for RVE.
 +  if (STI.isRVE())
 +    for (MCPhysReg Reg = RISCV::X16; Reg <= RISCV::X31; Reg++)
@@ -1392,42 +1362,6 @@ index c3ba4c1e7..1d5b9d8d2 100644
    case RISCVABI::ABI_ILP32:
    case RISCVABI::ABI_LP64:
      return CSR_ILP32_LP64_RegMask;
-diff --git a/llvm/lib/Target/RISCV/RISCVTargetMachine.cpp b/llvm/lib/Target/RISCV/RISCVTargetMachine.cpp
-index 59dac5c7b..ec934a118 100644
---- a/llvm/lib/Target/RISCV/RISCVTargetMachine.cpp
-+++ b/llvm/lib/Target/RISCV/RISCVTargetMachine.cpp
-@@ -92,10 +92,20 @@ extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeRISCVTarget() {
-   initializeRISCVPushPopOptPass(*PR);
- }
- 
--static StringRef computeDataLayout(const Triple &TT) {
--  if (TT.isArch64Bit())
-+static StringRef computeDataLayout(const Triple &TT,
-+                                   const TargetOptions &Options) {
-+  StringRef ABIName = Options.MCOptions.getABIName();
-+  if (TT.isArch64Bit()) {
-+    if (ABIName == "lp64e")
-+      return "e-m:e-p:64:64-i64:64-i128:128-n32:64-S64";
-+
-     return "e-m:e-p:64:64-i64:64-i128:128-n32:64-S128";
-+  }
-   assert(TT.isArch32Bit() && "only RV32 and RV64 are currently supported");
-+
-+  if (ABIName == "ilp32e")
-+    return "e-m:e-p:32:32-i64:64-n32-S32";
-+
-   return "e-m:e-p:32:32-i64:64-n32-S128";
- }
- 
-@@ -110,7 +120,7 @@ RISCVTargetMachine::RISCVTargetMachine(const Target &T, const Triple &TT,
-                                        std::optional<Reloc::Model> RM,
-                                        std::optional<CodeModel::Model> CM,
-                                        CodeGenOpt::Level OL, bool JIT)
--    : LLVMTargetMachine(T, computeDataLayout(TT), TT, CPU, FS, Options,
-+    : LLVMTargetMachine(T, computeDataLayout(TT, Options), TT, CPU, FS, Options,
-                         getEffectiveRelocModel(TT, RM),
-                         getEffectiveCodeModel(CM, CodeModel::Small), OL),
-       TLOF(std::make_unique<RISCVELFTargetObjectFile>()) {
 diff --git a/llvm/test/CodeGen/RISCV/callee-saved-fpr32s.ll b/llvm/test/CodeGen/RISCV/callee-saved-fpr32s.ll
 index 711131693..828721d88 100644
 --- a/llvm/test/CodeGen/RISCV/callee-saved-fpr32s.ll
@@ -1448,14 +1382,14 @@ index 711131693..828721d88 100644
  ; RUN:   | FileCheck %s -check-prefix=ILP32F
  ; RUN: llc -mtriple=riscv64 -mattr=+f -target-abi lp64f -verify-machineinstrs < %s \
 @@ -14,8 +18,8 @@
- 
+
  @var = global [32 x float] zeroinitializer
- 
+
 -; All floating point registers are temporaries for the ilp32 and lp64 ABIs.
 -; fs0-fs11 are callee-saved for the ilp32f, ilp32d, lp64f, and lp64d ABIs.
 +; All floating point registers are temporaries for the ilp32, ilp32e, lp64e and lp64
 +; ABIs. fs0-fs11 are callee-saved for the ilp32f, ilp32d, lp64f, and lp64d ABIs.
- 
+
  ; This function tests that RISCVRegisterInfo::getCalleeSavedRegs returns
  ; something appropriate.
 @@ -91,6 +95,76 @@ define void @callee() nounwind {
@@ -1926,13 +1860,13 @@ index 40076316b..f34609b7f 100644
  ; RUN:   | FileCheck %s -check-prefix=ILP32D
  ; RUN: llc -mtriple=riscv64 -mattr=+d -target-abi lp64d -verify-machineinstrs < %s \
 @@ -10,7 +12,7 @@
- 
+
  @var = global [32 x double] zeroinitializer
- 
+
 -; All floating point registers are temporaries for the ilp32 and lp64 ABIs.
 +; All floating point registers are temporaries for the ilp32, lp64e and lp64 ABIs.
  ; fs0-fs11 are callee-saved for the ilp32f, ilp32d, lp64f, and lp64d ABIs.
- 
+
  ; This function tests that RISCVRegisterInfo::getCalleeSavedRegs returns
 @@ -157,6 +159,76 @@ define void @callee() nounwind {
  ; LP64-NEXT:    fsd fa5, %lo(var)(a0)
@@ -5592,7 +5526,7 @@ index 5b269014b..e45402871 100644
 +; RUN: 2>&1 | FileCheck %s -check-prefix CHECK -check-prefix CHECK-RV64E-F
 +; RUN: llc -mtriple riscv64-unknown-elf -mattr=+e,+f,+d -o - %s \
 +; RUN: 2>&1 | FileCheck %s -check-prefix CHECK -check-prefix CHECK-RV64E-FD
- 
+
  ;
  ; Checking for special return instructions (sret, mret).
 @@ -289,6 +301,124 @@ define void @foo_with_call() #1 {
@@ -6446,9 +6380,9 @@ index f10dfbd31..933dda86f 100644
  ; RUN:   | FileCheck %s -check-prefix=RV64I
 +; RUN: llc -mtriple=riscv64 -target-abi lp64e -verify-machineinstrs < %s \
 +; RUN:   | FileCheck %s -check-prefix=RV64I-LP64E
- 
+
  declare void @callee(ptr, ptr)
- 
+
 @@ -34,6 +38,33 @@ define void @caller(i32 %n) {
  ; RV32I-NEXT:    addi sp, sp, 64
  ; RV32I-NEXT:    ret
@@ -6533,9 +6467,9 @@ index d87db54fd..1b10afe5d 100644
  ; RUN:   | FileCheck %s -check-prefix=RV64I
 +; RUN: llc -mtriple=riscv64 -target-abi lp64e -verify-machineinstrs < %s \
 +; RUN:   | FileCheck %s -check-prefix=RV64I-LP64E
- 
+
  declare void @callee(ptr)
- 
+
 +define void @caller16() {
 +; RV32I-LABEL: caller16:
 +; RV32I:       # %bb.0:
@@ -7603,13 +7537,13 @@ index 683ebc4f5..ee520e087 100644
 @@ -56,9 +56,6 @@
  # CHECK: :[[#@LINE+1]]:12: warning: unknown option, expected 'push', 'pop', 'rvc', 'norvc', 'arch', 'relax' or 'norelax'
  .option bar
- 
+
 -# CHECK: :[[#@LINE+1]]:16: error: unknown extension feature
 -.option arch, -i
 -
  # CHECK: :[[#@LINE+1]]:12: error: .option pop with no .option push
  .option pop
- 
+
 diff --git a/llvm/test/MC/RISCV/target-abi-invalid.s b/llvm/test/MC/RISCV/target-abi-invalid.s
 index d7dba182f..f78b1481b 100644
 --- a/llvm/test/MC/RISCV/target-abi-invalid.s
@@ -7628,7 +7562,7 @@ index d7dba182f..f78b1481b 100644
  # RV32EFD-LP64D: 64-bit ABIs are not supported for 32-bit targets (ignoring target-abi)
  # RV32E-LP64E: 64-bit ABIs are not supported for 32-bit targets (ignoring target-abi)
 +# RV32EFD-LP64D: LLVM ERROR: ILP32E cannot be used with the D ISA extension
- 
+
  # RUN: llvm-mc -triple=riscv32 -target-abi ilp32f < %s 2>&1 \
  # RUN:   | FileCheck -check-prefix=RV32I-ILP32F %s
 @@ -69,15 +70,17 @@
@@ -7641,13 +7575,13 @@ index d7dba182f..f78b1481b 100644
 -# RUN: llvm-mc -triple=riscv32 -mattr=+e,+d -target-abi ilp32d < %s 2>&1 \
 +# RUN: not --crash llvm-mc -triple=riscv32 -mattr=+e,+d -target-abi ilp32d < %s 2>&1 \
  # RUN:   | FileCheck -check-prefix=RV32EFD-ILP32D %s
- 
+
  # RV32E-ILP32: Only the ilp32e ABI is supported for RV32E (ignoring target-abi)
  # RV32EF-ILP32F: Only the ilp32e ABI is supported for RV32E (ignoring target-abi)
  # RV32EFD-ILP32F: Only the ilp32e ABI is supported for RV32E (ignoring target-abi)
 +# RV32EFD-ILP32F: LLVM ERROR: ILP32E cannot be used with the D ISA extension
  # RV32EFD-ILP32D: Only the ilp32e ABI is supported for RV32E (ignoring target-abi)
 +# RV32EFD-ILP32D: LLVM ERROR: ILP32E cannot be used with the D ISA extension
- 
+
  # RUN: llvm-mc -triple=riscv64 -mattr=+e -target-abi lp64 < %s 2>&1 \
  # RUN:   | FileCheck -check-prefix=RV64EF-LP64F %s

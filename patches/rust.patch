@@ -1,48 +1,26 @@
-diff --git a/compiler/rustc_codegen_ssa/src/back/metadata.rs b/compiler/rustc_codegen_ssa/src/back/metadata.rs
-index b683e1b45a8..f5ab0689fa3 100644
---- a/compiler/rustc_codegen_ssa/src/back/metadata.rs
-+++ b/compiler/rustc_codegen_ssa/src/back/metadata.rs
-@@ -318,7 +318,7 @@ pub(crate) fn create_object_file(sess: &Session) -> Option<write::Object<'static
-                 "" | "ilp32" | "lp64" => (),
-                 "ilp32f" | "lp64f" => e_flags |= elf::EF_RISCV_FLOAT_ABI_SINGLE,
-                 "ilp32d" | "lp64d" => e_flags |= elf::EF_RISCV_FLOAT_ABI_DOUBLE,
--                "ilp32e" => e_flags |= elf::EF_RISCV_RVE,
-+                "ilp32e" | "lp64e" => e_flags |= elf::EF_RISCV_RVE,
-                 _ => bug!("unknown RISC-V ABI name"),
-             }
- 
 diff --git a/compiler/rustc_target/src/spec/mod.rs b/compiler/rustc_target/src/spec/mod.rs
 index 9d25388b90f..c37d623e58a 100644
 --- a/compiler/rustc_target/src/spec/mod.rs
 +++ b/compiler/rustc_target/src/spec/mod.rs
 @@ -1596,6 +1596,8 @@ fn $module() {
- 
+
      ("x86_64-unikraft-linux-musl", x86_64_unikraft_linux_musl),
- 
-+    ("riscv32em-unknown-none-elf", riscv32em_unknown_none_elf),
-+    ("riscv32ema-unknown-none-elf", riscv32ema_unknown_none_elf),
+
++    ("riscv32em-athena-zkvm-elf", riscv32em_athena_zkvm_elf),
      ("riscv32i-unknown-none-elf", riscv32i_unknown_none_elf),
      ("riscv32im-unknown-none-elf", riscv32im_unknown_none_elf),
      ("riscv32imc-unknown-none-elf", riscv32imc_unknown_none_elf),
-@@ -1606,6 +1608,7 @@ fn $module() {
-     ("riscv32imac-unknown-xous-elf", riscv32imac_unknown_xous_elf),
-     ("riscv32gc-unknown-linux-gnu", riscv32gc_unknown_linux_gnu),
-     ("riscv32gc-unknown-linux-musl", riscv32gc_unknown_linux_musl),
-+    ("riscv64ema-unknown-none-elf", riscv64ema_unknown_none_elf),
-     ("riscv64imac-unknown-none-elf", riscv64imac_unknown_none_elf),
-     ("riscv64gc-unknown-none-elf", riscv64gc_unknown_none_elf),
-     ("riscv64gc-unknown-linux-gnu", riscv64gc_unknown_linux_gnu),
-diff --git a/compiler/rustc_target/src/spec/targets/riscv32em_unknown_none_elf.rs b/compiler/rustc_target/src/spec/targets/riscv32em_unknown_none_elf.rs
+diff --git a/compiler/rustc_target/src/spec/targets/riscv32em_athena_zkvm_elf.rs b/compiler/rustc_target/src/spec/targets/riscv32em_athena_zkvm_elf.rs
 new file mode 100644
 index 00000000000..0304eb394c4
 --- /dev/null
-+++ b/compiler/rustc_target/src/spec/targets/riscv32em_unknown_none_elf.rs
++++ b/compiler/rustc_target/src/spec/targets/riscv32em_athena_zkvm_elf.rs
 @@ -0,0 +1,25 @@
 +use crate::spec::{Cc, LinkerFlavor, Lld, PanicStrategy, RelocModel, Target, TargetOptions};
 +
 +pub fn target() -> Target {
 +    Target {
-+        data_layout: "e-m:e-p:32:32-i64:64-n32-S32".into(),
++        data_layout: "e-m:e-p:32:32-i64:64-n32-S128".into(),
 +        llvm_target: "riscv32".into(),
 +        pointer_width: 32,
 +        arch: "riscv32".into(),
@@ -53,38 +31,11 @@ index 00000000000..0304eb394c4
 +            cpu: "generic-rv32".into(),
 +            features: "+e,+m".into(),
 +            llvm_abiname: "ilp32e".into(),
-+            max_atomic_width: Some(0),
-+            atomic_cas: false,
-+            panic_strategy: PanicStrategy::Abort,
-+            relocation_model: RelocModel::Static,
-+            emit_debug_gdb_scripts: false,
-+            eh_frame_header: false,
-+            ..Default::default()
-+        },
-+    }
-+}
-diff --git a/compiler/rustc_target/src/spec/targets/riscv32ema_unknown_none_elf.rs b/compiler/rustc_target/src/spec/targets/riscv32ema_unknown_none_elf.rs
-new file mode 100644
-index 00000000000..841406bcd86
---- /dev/null
-+++ b/compiler/rustc_target/src/spec/targets/riscv32ema_unknown_none_elf.rs
-@@ -0,0 +1,24 @@
-+use crate::spec::{Cc, LinkerFlavor, Lld, PanicStrategy, RelocModel, Target, TargetOptions};
-+
-+pub fn target() -> Target {
-+    Target {
-+        data_layout: "e-m:e-p:32:32-i64:64-n32-S32".into(),
-+        llvm_target: "riscv32".into(),
-+        pointer_width: 32,
-+        arch: "riscv32".into(),
-+
-+        options: TargetOptions {
-+            linker_flavor: LinkerFlavor::Gnu(Cc::No, Lld::Yes),
-+            linker: Some("rust-lld".into()),
-+            cpu: "generic-rv32".into(),
-+            features: "+e,+m,+a".into(),
-+            llvm_abiname: "ilp32e".into(),
 +            max_atomic_width: Some(32),
++            os: "zkvm".into(),
++            vendor: "athena".into(),
++            singlethread: true,
++            atomic_cas: true,
 +            panic_strategy: PanicStrategy::Abort,
 +            relocation_model: RelocModel::Static,
 +            emit_debug_gdb_scripts: false,
@@ -93,35 +44,59 @@ index 00000000000..841406bcd86
 +        },
 +    }
 +}
-diff --git a/compiler/rustc_target/src/spec/targets/riscv64ema_unknown_none_elf.rs b/compiler/rustc_target/src/spec/targets/riscv64ema_unknown_none_elf.rs
-new file mode 100644
-index 00000000000..b5ee71dbbd1
---- /dev/null
-+++ b/compiler/rustc_target/src/spec/targets/riscv64ema_unknown_none_elf.rs
-@@ -0,0 +1,26 @@
-+use crate::spec::{Cc, CodeModel, LinkerFlavor, Lld, PanicStrategy};
-+use crate::spec::{RelocModel, Target, TargetOptions};
-+
-+pub fn target() -> Target {
-+    Target {
-+        data_layout: "e-m:e-p:64:64-i64:64-i128:128-n32:64-S64".into(),
-+        llvm_target: "riscv64".into(),
-+        pointer_width: 64,
-+        arch: "riscv64".into(),
-+
-+        options: TargetOptions {
-+            linker_flavor: LinkerFlavor::Gnu(Cc::No, Lld::Yes),
-+            linker: Some("rust-lld".into()),
-+            cpu: "generic-rv64".into(),
-+            max_atomic_width: Some(64),
-+            features: "+e,+m,+a".into(),
-+            llvm_abiname: "lp64e".into(),
-+            panic_strategy: PanicStrategy::Abort,
-+            relocation_model: RelocModel::Static,
-+            code_model: Some(CodeModel::Medium),
-+            emit_debug_gdb_scripts: false,
-+            eh_frame_header: false,
-+            ..Default::default()
-+        },
-+    }
-+}
+diff --git a/library/std/src/sys/pal/zkvm/args.rs b/library/std/src/sys/pal/zkvm/args.rs
+index 7753cf63840..583c16e3a47 100644
+--- a/library/std/src/sys/pal/zkvm/args.rs
++++ b/library/std/src/sys/pal/zkvm/args.rs
+@@ -1,6 +1,7 @@
+ use super::{abi, WORD_SIZE};
+ use crate::ffi::OsString;
+ use crate::fmt;
++use crate::sys::os_str;
+ use crate::sys_common::FromInner;
+
+ pub struct Args {
+@@ -33,7 +34,7 @@ fn argv(i: usize) -> OsString {
+         // "os_str".
+         let arg_bytes: &[u8] =
+             unsafe { crate::slice::from_raw_parts(words.cast() as *const u8, arg_len) };
+-        OsString::from_inner(super::os_str::Buf { inner: arg_bytes.to_vec() })
++        OsString::from_inner(os_str::Buf { inner: arg_bytes.to_vec() })
+     }
+ }
+
+diff --git a/library/std/src/sys/pal/zkvm/os.rs b/library/std/src/sys/pal/zkvm/os.rs
+index d8739ee3824..759beb2d306 100644
+--- a/library/std/src/sys/pal/zkvm/os.rs
++++ b/library/std/src/sys/pal/zkvm/os.rs
+@@ -5,6 +5,7 @@
+ use crate::io;
+ use crate::marker::PhantomData;
+ use crate::path::{self, PathBuf};
++use crate::sys::os_str;
+ use crate::sys_common::FromInner;
+
+ pub fn errno() -> i32 {
+@@ -111,7 +112,7 @@ pub fn getenv(varname: &OsStr) -> Option<OsString> {
+     // reimplement "os_str" instead of just using the generic unix
+     // "os_str".
+     let u8s: &[u8] = unsafe { crate::slice::from_raw_parts(words.cast() as *const u8, nbytes) };
+-    Some(OsString::from_inner(super::os_str::Buf { inner: u8s.to_vec() }))
++    Some(OsString::from_inner(os_str::Buf { inner: u8s.to_vec() }))
+ }
+
+ pub fn setenv(_: &OsStr, _: &OsStr) -> io::Result<()> {
+diff --git a/library/std/src/sys/pal/zkvm/mod.rs b/library/std/src/sys/pal/zkvm/mod.rs
+index 62f0a2c7b1c..4f79f8c4961 100644
+--- a/library/std/src/sys/pal/zkvm/mod.rs
++++ b/library/std/src/sys/pal/zkvm/mod.rs
+@@ -12,8 +12,6 @@
+ pub mod alloc;
+ #[path = "../zkvm/args.rs"]
+ pub mod args;
+-#[path = "../unix/cmath.rs"]
+-pub mod cmath;
+ pub mod env;
+ #[path = "../unsupported/fs.rs"]
+ pub mod fs;
+

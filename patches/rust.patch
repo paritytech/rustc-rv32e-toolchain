@@ -12,10 +12,10 @@ index 6c698c5b0..357cd0e3e 100644
      ("riscv32im-unknown-none-elf", riscv32im_unknown_none_elf),
 diff --git a/compiler/rustc_target/src/spec/targets/riscv32em_athena_zkvm_elf.rs b/compiler/rustc_target/src/spec/targets/riscv32em_athena_zkvm_elf.rs
 new file mode 100644
-index 00000000000..0304eb394c4
+index 000000000..7a09c78a4
 --- /dev/null
 +++ b/compiler/rustc_target/src/spec/targets/riscv32em_athena_zkvm_elf.rs
-@@ -0,0 +1,25 @@
+@@ -0,0 +1,28 @@
 +use crate::spec::{Cc, LinkerFlavor, Lld, PanicStrategy, RelocModel, Target, TargetOptions};
 +
 +pub fn target() -> Target {

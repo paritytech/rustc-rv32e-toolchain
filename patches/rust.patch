@@ -15,7 +15,7 @@ new file mode 100644
 index 000000000..7a09c78a4
 --- /dev/null
 +++ b/compiler/rustc_target/src/spec/targets/riscv32em_athena_zkvm_elf.rs
-@@ -0,0 +1,28 @@
+@@ -0,0 +1,29 @@
 +use crate::spec::{Cc, LinkerFlavor, Lld, PanicStrategy, RelocModel, Target, TargetOptions};
 +
 +pub fn target() -> Target {
@@ -36,6 +36,7 @@ index 000000000..7a09c78a4
 +            vendor: "athena".into(),
 +            singlethread: true,
 +            atomic_cas: true,
++            executables: true,
 +            panic_strategy: PanicStrategy::Abort,
 +            relocation_model: RelocModel::Static,
 +            emit_debug_gdb_scripts: false,

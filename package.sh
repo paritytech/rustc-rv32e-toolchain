@@ -20,7 +20,7 @@ inst () {
 
 # dist contains the tared components we want to install
 mv rust/build/dist .
-rm -rf rust
+#rm -rf rust
 
 cd dist
 mkdir unpack

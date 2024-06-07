@@ -1,24 +1,15 @@
-change-id = 102579
-profile = "user"
-
-[llvm]
-targets = "AArch64;RISCV;X86"
+change-id = 116881
 
 [build]
-compiler-docs = true
-docs = false
-locked-deps = true
+target = ["riscv32em-athena-zkvm-elf"]
+extended = true
+tools = ["cargo", "cargo-clippy", "clippy", "rustfmt"]
+configure-args = []
 
 [rust]
-channel = "nightly"
 lld = true
-jemalloc = true
-debuginfo-level-std = 2
-remap-debuginfo = true
-new-symbol-mangling = true
-split-debuginfo = "off"
+llvm-tools = true
+channel = "nightly"
 
-# we gonna repack anyways so time spent on compression here is wasted
-[dist]
-compression-formats = ["gz"]
-compression-profile = "fast"
+[llvm]
+download-ci-llvm = false

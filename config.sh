@@ -2,7 +2,7 @@
 
 param1=${1:-}
 
-export RUST_COMMIT=aedd173a2c086e558c2b66d3743b344f977621a7
+export RUST_COMMIT=295b693dfe72d0ac2d0924eb84af39e364d9c3e3
 
 # If -rust_commit specified then only export the rust commit variable
 if [ "$param1" == "-rust_commit" ]; then
@@ -21,13 +21,13 @@ regex='([0-9]{4}-[0-9]{2}-[0-9]{2})'
 if [[ $commit_show_output =~ $regex ]]; then
   rust_commit_date="${BASH_REMATCH[1]}"
 else
-  echo "Impossible extracting date from rustc commit"
+  echo "Could not extract date from rustc commit"
   exit 1
 fi
 
 # Toolchain itself does not need to be versioned by default. It makes referencing it from
 # various other projects harder while things are in development. Version can be queried by
-# calling `rustc --version anyways`. If someone needs to keep an older version they can
+# calling `rustc --version` anyway. If someone needs to keep an older version they can
 # always rename the folder at install time.
 export TOOLCHAIN_NAME=rve-nightly
 

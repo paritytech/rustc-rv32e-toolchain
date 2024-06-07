@@ -1,22 +1,48 @@
 diff --git a/compiler/rustc_target/src/spec/mod.rs b/compiler/rustc_target/src/spec/mod.rs
-index 6c698c5b0..357cd0e3e 100644
+index 235ab0b6e7d..87b204d711a 100644
 --- a/compiler/rustc_target/src/spec/mod.rs
 +++ b/compiler/rustc_target/src/spec/mod.rs
-@@ -1596,6 +1596,7 @@ fn $module() {
+@@ -1635,6 +1635,7 @@ fn $module() {
 
      ("x86_64-unikraft-linux-musl", x86_64_unikraft_linux_musl),
 
 +    ("riscv32em-athena-zkvm-elf", riscv32em_athena_zkvm_elf),
      ("riscv32i-unknown-none-elf", riscv32i_unknown_none_elf),
-     ("riscv32im-risc0-zkvm-elf", riscv32im_risc0_zkvm_elf),
+     ("riscv32im-succinct-zkvm-elf", riscv32im_succinct_zkvm_elf),
      ("riscv32im-unknown-none-elf", riscv32im_unknown_none_elf),
+diff --git a/src/bootstrap/src/lib.rs b/src/bootstrap/src/lib.rs
+index 8e9d342e65d..d2dae37d73a 100644
+--- a/src/bootstrap/src/lib.rs
++++ b/src/bootstrap/src/lib.rs
+@@ -101,7 +101,7 @@
+     // #[cfg(bootstrap)] zkvm
+     (Some(Mode::Std), "target_os", Some(&["zkvm"])),
+     // #[cfg(bootstrap)] succinct
+-    (Some(Mode::Std), "target_vendor", Some(&["succinct"])),
++    (Some(Mode::Std), "target_vendor", Some(&["athena", "succinct"])),
+     (Some(Mode::Std), "target_arch", Some(&["asmjs", "spirv", "nvptx", "xtensa"])),
+     /* Extra names used by dependencies */
+     // FIXME: Used by serde_json, but we should not be triggering on external dependencies.
+diff --git a/src/tools/build-manifest/src/main.rs b/src/tools/build-manifest/src/main.rs
+index ea620c64f3c..28363a2cb8a 100644
+--- a/src/tools/build-manifest/src/main.rs
++++ b/src/tools/build-manifest/src/main.rs
+@@ -119,6 +119,7 @@
+     "powerpc-unknown-linux-gnu",
+     "powerpc64-unknown-linux-gnu",
+     "powerpc64le-unknown-linux-gnu",
++    "riscv32e-athena-zkvm-elf",
+     "riscv32i-unknown-none-elf",
+     "riscv32im-succinct-zkvm-elf",
+     "riscv32im-unknown-none-elf",
 diff --git a/compiler/rustc_target/src/spec/targets/riscv32em_athena_zkvm_elf.rs b/compiler/rustc_target/src/spec/targets/riscv32em_athena_zkvm_elf.rs
 new file mode 100644
-index 000000000..7a09c78a4
+index 00000000000..0ac603543b9
 --- /dev/null
 +++ b/compiler/rustc_target/src/spec/targets/riscv32em_athena_zkvm_elf.rs
-@@ -0,0 +1,29 @@
-+use crate::spec::{Cc, LinkerFlavor, Lld, PanicStrategy, RelocModel, Target, TargetOptions};
+@@ -0,0 +1,38 @@
++use crate::spec::{Cc, LinkerFlavor, Lld, PanicStrategy, RelocModel};
++use crate::spec::{Target, TargetOptions};
 +
 +pub fn target() -> Target {
 +    Target {
@@ -26,86 +52,30 @@ index 000000000..7a09c78a4
 +        arch: "riscv32".into(),
 +
 +        options: TargetOptions {
++            os: "zkvm".into(),
++            vendor: "athena".into(),
 +            linker_flavor: LinkerFlavor::Gnu(Cc::No, Lld::Yes),
 +            linker: Some("rust-lld".into()),
 +            cpu: "generic-rv32".into(),
++
++            // Some crates (*cough* crossbeam) assume you have 64 bit
++            // atomics if the target name is not in a hardcoded list.
++            // Since zkvm is singlethreaded and all operations are
++            // atomic, I guess we can just say we support 64-bit
++            // atomics.
++            max_atomic_width: Some(64),
++            atomic_cas: true,
++
 +            features: "+e,+m".into(),
 +            llvm_abiname: "ilp32e".into(),
-+            max_atomic_width: Some(64),
-+            os: "zkvm".into(),
-+            vendor: "athena".into(),
-+            singlethread: true,
-+            atomic_cas: true,
 +            executables: true,
 +            panic_strategy: PanicStrategy::Abort,
 +            relocation_model: RelocModel::Static,
 +            emit_debug_gdb_scripts: false,
 +            eh_frame_header: false,
++            singlethread: true,
 +            ..Default::default()
 +        },
 +    }
 +}
-diff --git a/library/std/src/sys/pal/zkvm/args.rs b/library/std/src/sys/pal/zkvm/args.rs
-index 7753cf63840..583c16e3a47 100644
---- a/library/std/src/sys/pal/zkvm/args.rs
-+++ b/library/std/src/sys/pal/zkvm/args.rs
-@@ -1,6 +1,7 @@
- use super::{abi, WORD_SIZE};
- use crate::ffi::OsString;
- use crate::fmt;
-+use crate::sys::os_str;
- use crate::sys_common::FromInner;
-
- pub struct Args {
-@@ -33,7 +34,7 @@ fn argv(i: usize) -> OsString {
-         // "os_str".
-         let arg_bytes: &[u8] =
-             unsafe { crate::slice::from_raw_parts(words.cast() as *const u8, arg_len) };
--        OsString::from_inner(super::os_str::Buf { inner: arg_bytes.to_vec() })
-+        OsString::from_inner(os_str::Buf { inner: arg_bytes.to_vec() })
-     }
- }
-
-diff --git a/library/std/src/sys/pal/zkvm/os.rs b/library/std/src/sys/pal/zkvm/os.rs
-index d8739ee3824..759beb2d306 100644
---- a/library/std/src/sys/pal/zkvm/os.rs
-+++ b/library/std/src/sys/pal/zkvm/os.rs
-@@ -5,6 +5,7 @@
- use crate::io;
- use crate::marker::PhantomData;
- use crate::path::{self, PathBuf};
-+use crate::sys::os_str;
- use crate::sys_common::FromInner;
-
- pub fn errno() -> i32 {
-@@ -111,7 +112,7 @@ pub fn getenv(varname: &OsStr) -> Option<OsString> {
-     // reimplement "os_str" instead of just using the generic unix
-     // "os_str".
-     let u8s: &[u8] = unsafe { crate::slice::from_raw_parts(words.cast() as *const u8, nbytes) };
--    Some(OsString::from_inner(super::os_str::Buf { inner: u8s.to_vec() }))
-+    Some(OsString::from_inner(os_str::Buf { inner: u8s.to_vec() }))
- }
-
- pub fn setenv(_: &OsStr, _: &OsStr) -> io::Result<()> {
-diff --git a/library/std/src/sys/pal/zkvm/mod.rs b/library/std/src/sys/pal/zkvm/mod.rs
-index 7f221dc4fd9..ebdcb6abbdb 100644
---- a/library/std/src/sys/pal/zkvm/mod.rs
-+++ b/library/std/src/sys/pal/zkvm/mod.rs
-@@ -12,8 +12,6 @@
- pub mod alloc;
- #[path = "../zkvm/args.rs"]
- pub mod args;
--#[path = "../unix/cmath.rs"]
--pub mod cmath;
- pub mod env;
- #[path = "../unsupported/fs.rs"]
- pub mod fs;
-@@ -24,8 +22,6 @@
- #[path = "../unsupported/once.rs"]
- pub mod once;
- pub mod os;
--#[path = "../unix/os_str.rs"]
--pub mod os_str;
- #[path = "../unix/path.rs"]
- pub mod path;
- #[path = "../unsupported/pipe.rs"]
++

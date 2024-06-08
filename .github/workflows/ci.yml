@@ -42,13 +42,6 @@ jobs:
           submodules: recursive
           path: toolchain
 
-      - name: Check out succinctlabs/rust
-        uses: actions/checkout@v3
-        with:
-          repository: succinctlabs/rust
-          path: toolchain/rust
-          fetch-depth: 0
-
       - name: Check out athenavm/athena
         uses: actions/checkout@v3
         with:

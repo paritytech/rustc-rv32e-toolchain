@@ -1,46 +1,33 @@
 diff --git a/compiler/rustc_target/src/spec/mod.rs b/compiler/rustc_target/src/spec/mod.rs
-index 235ab0b6e7d..87b204d711a 100644
+index 941d767b..1b4004c4 100644
 --- a/compiler/rustc_target/src/spec/mod.rs
 +++ b/compiler/rustc_target/src/spec/mod.rs
-@@ -1635,6 +1635,7 @@ fn $module() {
+@@ -1618,6 +1618,7 @@ fn $module() {
 
      ("x86_64-unikraft-linux-musl", x86_64_unikraft_linux_musl),
 
 +    ("riscv32em-athena-zkvm-elf", riscv32em_athena_zkvm_elf),
      ("riscv32i-unknown-none-elf", riscv32i_unknown_none_elf),
-     ("riscv32im-succinct-zkvm-elf", riscv32im_succinct_zkvm_elf),
+     ("riscv32im-risc0-zkvm-elf", riscv32im_risc0_zkvm_elf),
      ("riscv32im-unknown-none-elf", riscv32im_unknown_none_elf),
-diff --git a/src/bootstrap/src/lib.rs b/src/bootstrap/src/lib.rs
-index 8e9d342e65d..d2dae37d73a 100644
---- a/src/bootstrap/src/lib.rs
-+++ b/src/bootstrap/src/lib.rs
-@@ -101,7 +101,7 @@
-     // #[cfg(bootstrap)] zkvm
-     (Some(Mode::Std), "target_os", Some(&["zkvm"])),
-     // #[cfg(bootstrap)] succinct
--    (Some(Mode::Std), "target_vendor", Some(&["succinct"])),
-+    (Some(Mode::Std), "target_vendor", Some(&["athena", "succinct"])),
-     (Some(Mode::Std), "target_arch", Some(&["asmjs", "spirv", "nvptx", "xtensa"])),
-     /* Extra names used by dependencies */
-     // FIXME: Used by serde_json, but we should not be triggering on external dependencies.
 diff --git a/src/tools/build-manifest/src/main.rs b/src/tools/build-manifest/src/main.rs
-index ea620c64f3c..28363a2cb8a 100644
+index eab9138b..60507063 100644
 --- a/src/tools/build-manifest/src/main.rs
 +++ b/src/tools/build-manifest/src/main.rs
-@@ -119,6 +119,7 @@
+@@ -123,6 +123,7 @@
      "powerpc-unknown-linux-gnu",
      "powerpc64-unknown-linux-gnu",
      "powerpc64le-unknown-linux-gnu",
 +    "riscv32e-athena-zkvm-elf",
      "riscv32i-unknown-none-elf",
-     "riscv32im-succinct-zkvm-elf",
+     "riscv32im-risc0-zkvm-elf",
      "riscv32im-unknown-none-elf",
 diff --git a/compiler/rustc_target/src/spec/targets/riscv32em_athena_zkvm_elf.rs b/compiler/rustc_target/src/spec/targets/riscv32em_athena_zkvm_elf.rs
 new file mode 100644
-index 00000000000..0ac603543b9
+index 00000000..2a95006c
 --- /dev/null
 +++ b/compiler/rustc_target/src/spec/targets/riscv32em_athena_zkvm_elf.rs
-@@ -0,0 +1,38 @@
+@@ -0,0 +1,44 @@
 +use crate::spec::{Cc, LinkerFlavor, Lld, PanicStrategy, RelocModel};
 +use crate::spec::{Target, TargetOptions};
 +
@@ -48,6 +35,12 @@ index 00000000000..0ac603543b9
 +    Target {
 +        data_layout: "e-m:e-p:32:32-i64:64-n32-S128".into(),
 +        llvm_target: "riscv32".into(),
++        metadata: crate::spec::TargetMetadata {
++            description: None,
++            tier: None,
++            host_tools: None,
++            std: None,
++        },
 +        pointer_width: 32,
 +        arch: "riscv32".into(),
 +

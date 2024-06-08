@@ -36,11 +36,17 @@ jobs:
           cargo version
           rustup toolchain list
 
+      - name: Check out athenavm/rustc-rv32e-toolchain
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          path: toolchain
+
       - name: Check out succinctlabs/rust
         uses: actions/checkout@v3
         with:
           repository: succinctlabs/rust
-          path: rust
+          path: toolchain/rust
           fetch-depth: 0
 
       - name: Check out athenavm/athena
@@ -51,7 +57,7 @@ jobs:
           path: athena
 
       - name: Build
-        run: GITHUB_ACTIONS=false ATHENA_BUILD_DIR=$GITHUB_WORKSPACE cargo run --bin cargo-athena -- athena build-toolchain
+        run: GITHUB_ACTIONS=false ATHENA_BUILD_DIR=$GITHUB_WORKSPACE/toolchain cargo run --bin cargo-athena -- athena build-toolchain
         working-directory: athena
 
       - name: Archive build output

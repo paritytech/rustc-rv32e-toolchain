@@ -1,53 +1,89 @@
+diff --git a/Cargo.lock b/Cargo.lock
+index 927e93f2..dfbe7db5 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -734,9 +734,8 @@ checksum = "55b672471b4e9f9e95499ea597ff64941a309b2cdbffcc46f2cc5e2d971fd335"
+
+ [[package]]
+ name = "compiler_builtins"
+-version = "0.1.108"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "d68bc55329711cd719c2687bb147bc06211b0521f97ef398280108ccb23227e9"
++version = "0.1.105"
++source = "git+https://github.com/rust-lang/compiler-builtins?rev=0.1.105#80ed5f8c3ddbea7986c4a8243e42b963cb954b42"
+ dependencies = [
+  "cc",
+  "rustc-std-workspace-core",
+diff --git a/Cargo.toml b/Cargo.toml
+index 5dd315ef2f7..680fb821c4c 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -120,6 +120,7 @@ strip = true
+ rustc-std-workspace-core = { path = 'library/rustc-std-workspace-core' }
+ rustc-std-workspace-alloc = { path = 'library/rustc-std-workspace-alloc' }
+ rustc-std-workspace-std = { path = 'library/rustc-std-workspace-std' }
++compiler_builtins = { git = "https://github.com/rust-lang/compiler-builtins", rev = "0.1.105" }
+
+ [patch."https://github.com/rust-lang/rust-clippy"]
+ clippy_lints = { path = "src/tools/clippy/clippy_lints" }
 diff --git a/compiler/rustc_target/src/spec/mod.rs b/compiler/rustc_target/src/spec/mod.rs
-index 235ab0b6e7d..87b204d711a 100644
+index 941d767b..1b4004c4 100644
 --- a/compiler/rustc_target/src/spec/mod.rs
 +++ b/compiler/rustc_target/src/spec/mod.rs
-@@ -1635,6 +1635,7 @@ fn $module() {
+@@ -1618,6 +1618,7 @@ fn $module() {
 
      ("x86_64-unikraft-linux-musl", x86_64_unikraft_linux_musl),
 
 +    ("riscv32em-athena-zkvm-elf", riscv32em_athena_zkvm_elf),
      ("riscv32i-unknown-none-elf", riscv32i_unknown_none_elf),
-     ("riscv32im-succinct-zkvm-elf", riscv32im_succinct_zkvm_elf),
+     ("riscv32im-risc0-zkvm-elf", riscv32im_risc0_zkvm_elf),
      ("riscv32im-unknown-none-elf", riscv32im_unknown_none_elf),
 diff --git a/src/bootstrap/src/lib.rs b/src/bootstrap/src/lib.rs
-index 8e9d342e65d..d2dae37d73a 100644
+index 5ed6b357e20..a31645ab6e7 100644
 --- a/src/bootstrap/src/lib.rs
 +++ b/src/bootstrap/src/lib.rs
-@@ -101,7 +101,7 @@
-     // #[cfg(bootstrap)] zkvm
-     (Some(Mode::Std), "target_os", Some(&["zkvm"])),
-     // #[cfg(bootstrap)] succinct
--    (Some(Mode::Std), "target_vendor", Some(&["succinct"])),
+@@ -91,6 +91,10 @@
+     /* Extra values not defined in the built-in targets yet, but used in std */
+     (Some(Mode::Std), "target_env", Some(&["libnx", "p2"])),
+     // (Some(Mode::Std), "target_os", Some(&[])),
++    // #[cfg(bootstrap)] zkvm
++    (Some(Mode::Std), "target_os", Some(&["zkvm"])),
++    // #[cfg(bootstrap)] athena
 +    (Some(Mode::Std), "target_vendor", Some(&["athena", "succinct"])),
-     (Some(Mode::Std), "target_arch", Some(&["asmjs", "spirv", "nvptx", "xtensa"])),
+     (Some(Mode::Std), "target_arch", Some(&["arm64ec", "spirv", "nvptx", "xtensa"])),
      /* Extra names used by dependencies */
      // FIXME: Used by serde_json, but we should not be triggering on external dependencies.
 diff --git a/src/tools/build-manifest/src/main.rs b/src/tools/build-manifest/src/main.rs
-index ea620c64f3c..28363a2cb8a 100644
+index eab9138b..60507063 100644
 --- a/src/tools/build-manifest/src/main.rs
 +++ b/src/tools/build-manifest/src/main.rs
-@@ -119,6 +119,7 @@
+@@ -123,6 +123,7 @@
      "powerpc-unknown-linux-gnu",
      "powerpc64-unknown-linux-gnu",
      "powerpc64le-unknown-linux-gnu",
-+    "riscv32e-athena-zkvm-elf",
++    "riscv32em-athena-zkvm-elf",
      "riscv32i-unknown-none-elf",
-     "riscv32im-succinct-zkvm-elf",
+     "riscv32im-risc0-zkvm-elf",
      "riscv32im-unknown-none-elf",
 diff --git a/compiler/rustc_target/src/spec/targets/riscv32em_athena_zkvm_elf.rs b/compiler/rustc_target/src/spec/targets/riscv32em_athena_zkvm_elf.rs
 new file mode 100644
-index 00000000000..0ac603543b9
+index 00000000..a84f76c2
 --- /dev/null
 +++ b/compiler/rustc_target/src/spec/targets/riscv32em_athena_zkvm_elf.rs
-@@ -0,0 +1,38 @@
+@@ -0,0 +1,44 @@
 +use crate::spec::{Cc, LinkerFlavor, Lld, PanicStrategy, RelocModel};
 +use crate::spec::{Target, TargetOptions};
 +
 +pub fn target() -> Target {
 +    Target {
-+        data_layout: "e-m:e-p:32:32-i64:64-n32-S128".into(),
++        data_layout: "e-m:e-p:32:32-i64:64-n32-S32".into(),
 +        llvm_target: "riscv32".into(),
++        metadata: crate::spec::TargetMetadata {
++            description: None,
++            tier: None,
++            host_tools: None,
++            std: None,
++        },
 +        pointer_width: 32,
 +        arch: "riscv32".into(),
 +
@@ -79,3 +115,58 @@ index 00000000000..0ac603543b9
 +    }
 +}
 +
+diff --git a/library/std/src/sys/pal/zkvm/args.rs b/library/std/src/sys/pal/zkvm/args.rs
+index 7753cf63840..583c16e3a47 100644
+--- a/library/std/src/sys/pal/zkvm/args.rs
++++ b/library/std/src/sys/pal/zkvm/args.rs
+@@ -1,6 +1,7 @@
+ use super::{abi, WORD_SIZE};
+ use crate::ffi::OsString;
+ use crate::fmt;
++use crate::sys::os_str;
+ use crate::sys_common::FromInner;
+
+ pub struct Args {
+@@ -33,7 +34,7 @@ fn argv(i: usize) -> OsString {
+         // "os_str".
+         let arg_bytes: &[u8] =
+             unsafe { crate::slice::from_raw_parts(words.cast() as *const u8, arg_len) };
+-        OsString::from_inner(super::os_str::Buf { inner: arg_bytes.to_vec() })
++        OsString::from_inner(os_str::Buf { inner: arg_bytes.to_vec() })
+     }
+ }
+
+diff --git a/library/std/src/sys/pal/zkvm/mod.rs b/library/std/src/sys/pal/zkvm/mod.rs
+index 228a976dbab..c5a1843d5ff 100644
+--- a/library/std/src/sys/pal/zkvm/mod.rs
++++ b/library/std/src/sys/pal/zkvm/mod.rs
+@@ -12,8 +12,6 @@
+ pub mod alloc;
+ #[path = "../zkvm/args.rs"]
+ pub mod args;
+-#[path = "../unix/cmath.rs"]
+-pub mod cmath;
+ pub mod env;
+ #[path = "../unsupported/fs.rs"]
+ pub mod fs;
+diff --git a/library/std/src/sys/pal/zkvm/os.rs b/library/std/src/sys/pal/zkvm/os.rs
+index d8739ee3824..759beb2d306 100644
+--- a/library/std/src/sys/pal/zkvm/os.rs
++++ b/library/std/src/sys/pal/zkvm/os.rs
+@@ -5,6 +5,7 @@
+ use crate::io;
+ use crate::marker::PhantomData;
+ use crate::path::{self, PathBuf};
++use crate::sys::os_str;
+ use crate::sys_common::FromInner;
+
+ pub fn errno() -> i32 {
+@@ -111,7 +112,7 @@ pub fn getenv(varname: &OsStr) -> Option<OsString> {
+     // reimplement "os_str" instead of just using the generic unix
+     // "os_str".
+     let u8s: &[u8] = unsafe { crate::slice::from_raw_parts(words.cast() as *const u8, nbytes) };
+-    Some(OsString::from_inner(super::os_str::Buf { inner: u8s.to_vec() }))
++    Some(OsString::from_inner(os_str::Buf { inner: u8s.to_vec() }))
+ }
+
+ pub fn setenv(_: &OsStr, _: &OsStr) -> io::Result<()> {

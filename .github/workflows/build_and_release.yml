@@ -77,6 +77,5 @@ jobs:
         with:
           draft: true
           tag: "v${{ steps.version.outputs.VERSION }}"
-          artifacts: "${{ env.ARTIFACT_NAME }}.tar.zst"
+          artifacts: "${{ env.ARTIFACT_NAME }}.tar.gz"
           allowUpdates: true
-          updateOnlyUnreleased: true

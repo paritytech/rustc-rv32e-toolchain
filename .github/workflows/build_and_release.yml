@@ -79,3 +79,7 @@ jobs:
           tag: "v${{ steps.version.outputs.VERSION }}"
           artifacts: "${{ env.ARTIFACT_NAME }}.tar.gz"
           allowUpdates: true
+          omitBodyDuringUpdate: true
+          omitDraftDuringUpdate: true
+          omitNameDuringUpdate: true
+          omitPrereleaseDuringUpdate: true

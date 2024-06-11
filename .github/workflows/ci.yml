@@ -56,6 +56,6 @@ jobs:
       - name: Archive build output
         uses: actions/upload-artifact@v3
         with:
-          name: rust-toolchain-${{ matrix.triple }}
+          name: athena-rust-toolchain-${{ matrix.triple }}
           path: |
-            athena/rust-toolchain-${{ matrix.triple }}.tar.gz
+            athena/athena-rust-toolchain-${{ matrix.triple }}.tar.gz

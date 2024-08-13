@@ -7,6 +7,10 @@ tools = ["cargo", "cargo-clippy", "clippy", "rustfmt"]
 configure-args = []
 cargo-native-static = true
 
+[target.riscv32em-athena-zkvm-elf]
+cc = "riscv32-unknown-elf-gcc"
+cxx = "riscv32-unknown-elf-g++"
+
 [rust]
 lld = true
 llvm-tools = true

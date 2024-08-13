@@ -7,8 +7,8 @@ tools = ["cargo", "cargo-clippy", "clippy", "rustfmt"]
 configure-args = []
 
 [target.riscv32em-athena-zkvm-elf]
-cc = "riscv32-unknown-elf-gcc"
-cxx = "riscv32-unknown-elf-g++"
+cc = "riscv64-unknown-elf-gcc"
+cxx = "riscv64-unknown-elf-g++"
 
 [rust]
 lld = true

@@ -46,7 +46,7 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
-          # - macos-latest
+          - macos-latest
 
     steps:
       - name: Free Disk Space (Ubuntu)
@@ -63,16 +63,18 @@ jobs:
 
       - uses: actions/checkout@v4
 
-      - name: Install ninja
+      - name: Install ninja and riscv-tools
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt update
-          sudo apt-get -y install ninja-build
+          sudo apt-get -y install ninja-build binutils-riscv64-unknown-elf gcc-riscv64-unknown-elf
 
-      - name: Install ninja
+      - name: Install ninja and riscv-tools
         if: contains(matrix.os, 'macos')
         run: |
           brew install ninja
+          brew tap riscv-software-src/riscv
+          brew install riscv-tools
 
       - name: Download source
         run: ./clone.sh

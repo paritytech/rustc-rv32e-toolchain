@@ -40,13 +40,15 @@ jobs:
 
   build-and-release:
     needs: prepare
+    timeout-minutes: 60
     runs-on: ${{ matrix.os }}
 
     strategy:
       matrix:
         os:
+          # self-hosted ARM macOS runner
+          - self-hosted
           - ubuntu-latest
-          - macos-latest
 
     steps:
       - name: Free Disk Space (Ubuntu)

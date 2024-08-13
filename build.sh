@@ -4,6 +4,10 @@ set -euo pipefail
 
 source config.sh
 
+# Fail fast if these tools aren't properly installed and in the path
+need_cmd riscv64-unknown-elf-gcc
+need_cmd riscv64-unknown-elf-g++
+
 # Rust requires a custom target file to exist for our custom target as part of the bootstrap build,
 # but it doesn't actually look at the contents.
 touch /tmp/riscv32em-athena-zkvm-elf.json

@@ -1,4 +1,4 @@
-change-id = 121754
+change-id = 125535
 
 [build]
 target = ["riscv32em-athena-zkvm-elf"]
@@ -6,6 +6,10 @@ extended = true
 tools = ["cargo", "cargo-clippy", "clippy", "rustfmt"]
 configure-args = []
 cargo-native-static = true
+
+[target.riscv32em-athena-zkvm-elf]
+cc = "riscv64-unknown-elf-gcc"
+cxx = "riscv64-unknown-elf-g++"
 
 [rust]
 lld = true

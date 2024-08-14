@@ -1,0 +1,17 @@
+diff --git a/compiler-rt/lib/builtins/CMakeLists.txt b/compiler-rt/lib/builtins/CMakeLists.txt
+index 28ded8766..b51ebe8ea 100644
+--- a/compiler-rt/lib/builtins/CMakeLists.txt
++++ b/compiler-rt/lib/builtins/CMakeLists.txt
+@@ -849,9 +849,9 @@ else ()
+ 
+       # For RISCV32, we must force enable int128 for compiling long
+       # double routines.
+-      if(COMPILER_RT_ENABLE_SOFTWARE_INT128 OR "${arch}" STREQUAL "riscv32")
+-        list(APPEND BUILTIN_CFLAGS_${arch} -fforce-enable-int128)
+-      endif()
++      #if(COMPILER_RT_ENABLE_SOFTWARE_INT128 OR "${arch}" STREQUAL "riscv32")
++      #  list(APPEND BUILTIN_CFLAGS_${arch} -fforce-enable-int128)
++      #endif()
+ 
+       add_compiler_rt_runtime(clang_rt.builtins
+                               STATIC

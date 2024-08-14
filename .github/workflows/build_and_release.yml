@@ -5,10 +5,10 @@ on:
   push:
     tags:
       - "*"
-    # branches:
-    #   - main
-    # paths-ignore:
-    #   - README.md
+    branches:
+      - main
+    paths-ignore:
+      - README.md
 
 permissions:
   contents: write
@@ -41,26 +41,23 @@ jobs:
   build-and-release:
     needs: prepare
     timeout-minutes: 120
-    runs-on: ${{ matrix.runner.label }}
+    runs-on: ${{ matrix.runner }}
 
     strategy:
       matrix:
-        runner:
-          - label: self-hosted
+        include:
+          - runner: [runs-on, runner=32cpu-linux-x64, "run-id=${{ github.run_id }}"]
+            os: ubuntu
+          - runner: [runs-on, runner=32cpu-linux-arm64, "run-id=${{ github.run_id }}"]
+            os: ubuntu
+          - runner: self-hosted
             os: macos
-          - label: [runs-on, runner=32cpu-linux-x64, "run-id=${{ github.run_id }}"]
-            os: ubuntu
-          - label: [runs-on, runner=32cpu-linux-arm64, "run-id=${{ github.run_id }}"]
-            os: ubuntu
-        # label: [self-hosted]
-        # include:
-        #   - label: runs-on
-        #     runner: 16cpu-linux-x64
-        #     run-id: "${{ github.run_id }}"
+          - runner: macos-13
+            os: macos
 
     steps:
       - name: Free Disk Space (Ubuntu)
-        if: matrix.runner.os == 'ubuntu'
+        if: matrix.os == 'ubuntu'
         uses: jlumbroso/free-disk-space@main
         with:
           tool-cache: true
@@ -74,13 +71,13 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install ninja and riscv-tools
-        if: matrix.runner.os == 'ubuntu'
+        if: matrix.os == 'ubuntu'
         run: |
           sudo apt update
           sudo apt-get -y install ninja-build gcc-riscv64-unknown-elf
 
       - name: Install ninja and riscv-tools
-        if: matrix.runner.os == 'macos'
+        if: matrix.os == 'macos'
         run: |
           brew install ninja
           brew tap riscv-software-src/riscv

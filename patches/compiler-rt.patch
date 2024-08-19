@@ -1,5 +1,5 @@
 diff --git a/compiler-rt/lib/builtins/riscv/restore.S b/compiler-rt/lib/builtins/riscv/restore.S
-index 73f64a920d66..2e185ecae3f7 100644
+index d87dfc1ac..2e9ec5b3d 100644
 --- a/compiler-rt/lib/builtins/riscv/restore.S
 +++ b/compiler-rt/lib/builtins/riscv/restore.S
 @@ -20,6 +20,46 @@
@@ -48,15 +48,15 @@ index 73f64a920d66..2e185ecae3f7 100644
 +
  #if __riscv_xlen == 32
  
-   .globl  __riscv_restore_12
-@@ -164,3 +204,5 @@ __riscv_restore_0:
+ #ifndef __riscv_abi_rve
+@@ -206,3 +246,5 @@ __riscv_restore_0:
  #else
  # error "xlen must be 32 or 64 for save-restore implementation
  #endif
 +
 +#endif
 diff --git a/compiler-rt/lib/builtins/riscv/save.S b/compiler-rt/lib/builtins/riscv/save.S
-index 85501aeb4c2e..86b62a369cd0 100644
+index 6324e05e9..ecc21bf57 100644
 --- a/compiler-rt/lib/builtins/riscv/save.S
 +++ b/compiler-rt/lib/builtins/riscv/save.S
 @@ -16,6 +16,54 @@
@@ -113,8 +113,8 @@ index 85501aeb4c2e..86b62a369cd0 100644
 +
  #if __riscv_xlen == 32
  
-   .globl  __riscv_save_12
-@@ -184,3 +232,5 @@ __riscv_save_0:
+ #ifndef __riscv_abi_rve
+@@ -226,3 +274,5 @@ __riscv_save_0:
  #else
  # error "xlen must be 32 or 64 for save-restore implementation
  #endif

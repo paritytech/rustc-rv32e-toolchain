@@ -4,6 +4,10 @@ This repository compile and publish as release final binaries of the Rust toolch
 
 ## Building
 
+First, follow the [installation instructions](https://github.com/ninja-build/ninja/wiki/Pre-built-Ninja-packages) to install `ninja`.  
+
+Next, execute the following commands:
+
 ```sh
 ./clone.sh
 ./patch.sh

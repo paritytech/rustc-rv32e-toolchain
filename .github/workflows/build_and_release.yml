@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - pg/bump-rust
     paths-ignore:
       - README.md
 

@@ -3,6 +3,7 @@ profile = "user"
 
 [llvm]
 targets = "AArch64;RISCV;X86"
+clang = true
 
 [build]
 compiler-docs = true

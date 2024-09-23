@@ -1,4 +1,4 @@
-change-id = 128841
+change-id = 130529
 profile = "user"
 
 [llvm]
@@ -17,7 +17,6 @@ jemalloc = true
 debuginfo-level-std = 2
 remap-debuginfo = true
 new-symbol-mangling = true
-split-debuginfo = "off"
 
 # we gonna repack anyways so time spent on compression here is wasted
 [dist]

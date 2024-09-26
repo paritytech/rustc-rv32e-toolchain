@@ -9,7 +9,14 @@ if [ "$param1" == "-rust_commit" ]; then
   return
 fi
 
-export TOOLCHAIN_HOST_TRIPLET=$(rustc --version --verbose | grep 'host: ' | sed -r 's/host: (.*)/\1/')
+if [ -z "$TOOLCHAIN_HOST_TRIPLET" ]; then
+    if command -v rustc >/dev/null 2>&1; then
+        export TOOLCHAIN_HOST_TRIPLET=$(rustc --version --verbose | grep 'host: ' | sed -r 's/host: (.*)/\1/')
+    else
+        echo "Error: Please either set TOOLCHAIN_HOST_TRIPLET or install Rust to automatically detect the target" >&2
+        exit 1
+    fi
+fi
 
 cd rust
 git show --no-patch --format=%ci $RUST_COMMIT > commit_show_output

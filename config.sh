@@ -18,6 +18,8 @@ if [ -z "$TOOLCHAIN_HOST_TRIPLET" ]; then
     fi
 fi
 
+echo "Using target triplet: $TOOLCHAIN_HOST_TRIPLET"
+
 cd rust
 git show --no-patch --format=%ci $RUST_COMMIT > commit_show_output
 commit_show_output=$(cat commit_show_output)

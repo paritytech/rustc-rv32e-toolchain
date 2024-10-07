@@ -1,8 +1,8 @@
 diff --git a/compiler/rustc_codegen_ssa/src/back/metadata.rs b/compiler/rustc_codegen_ssa/src/back/metadata.rs
-index b683e1b45a8..f5ab0689fa3 100644
+index 8857fda1..49365ace 100644
 --- a/compiler/rustc_codegen_ssa/src/back/metadata.rs
 +++ b/compiler/rustc_codegen_ssa/src/back/metadata.rs
-@@ -318,7 +318,7 @@ pub(crate) fn create_object_file(sess: &Session) -> Option<write::Object<'static
+@@ -325,7 +325,7 @@ pub(crate) fn create_object_file(sess: &Session) -> Option<write::Object<'static
                  "" | "ilp32" | "lp64" => (),
                  "ilp32f" | "lp64f" => e_flags |= elf::EF_RISCV_FLOAT_ABI_SINGLE,
                  "ilp32d" | "lp64d" => e_flags |= elf::EF_RISCV_FLOAT_ABI_DOUBLE,
@@ -12,19 +12,18 @@ index b683e1b45a8..f5ab0689fa3 100644
              }
  
 diff --git a/compiler/rustc_target/src/spec/mod.rs b/compiler/rustc_target/src/spec/mod.rs
-index 9d25388b90f..c37d623e58a 100644
+index 82e11a3a..9cd3d5d1 100644
 --- a/compiler/rustc_target/src/spec/mod.rs
 +++ b/compiler/rustc_target/src/spec/mod.rs
-@@ -1596,6 +1596,8 @@ fn $module() {
+@@ -1832,6 +1832,7 @@ fn $module() {
+     ("aarch64-unknown-trusty", aarch64_unknown_trusty),
+     ("x86_64-unknown-trusty", x86_64_unknown_trusty),
  
-     ("x86_64-unikraft-linux-musl", x86_64_unikraft_linux_musl),
- 
-+    ("riscv32em-unknown-none-elf", riscv32em_unknown_none_elf),
 +    ("riscv32ema-unknown-none-elf", riscv32ema_unknown_none_elf),
      ("riscv32i-unknown-none-elf", riscv32i_unknown_none_elf),
+     ("riscv32im-risc0-zkvm-elf", riscv32im_risc0_zkvm_elf),
      ("riscv32im-unknown-none-elf", riscv32im_unknown_none_elf),
-     ("riscv32imc-unknown-none-elf", riscv32imc_unknown_none_elf),
-@@ -1606,6 +1608,7 @@ fn $module() {
+@@ -1850,6 +1851,7 @@ fn $module() {
      ("riscv32imac-unknown-xous-elf", riscv32imac_unknown_xous_elf),
      ("riscv32gc-unknown-linux-gnu", riscv32gc_unknown_linux_gnu),
      ("riscv32gc-unknown-linux-musl", riscv32gc_unknown_linux_musl),
@@ -32,49 +31,24 @@ index 9d25388b90f..c37d623e58a 100644
      ("riscv64imac-unknown-none-elf", riscv64imac_unknown_none_elf),
      ("riscv64gc-unknown-none-elf", riscv64gc_unknown_none_elf),
      ("riscv64gc-unknown-linux-gnu", riscv64gc_unknown_linux_gnu),
-diff --git a/compiler/rustc_target/src/spec/targets/riscv32em_unknown_none_elf.rs b/compiler/rustc_target/src/spec/targets/riscv32em_unknown_none_elf.rs
-new file mode 100644
-index 00000000000..0304eb394c4
---- /dev/null
-+++ b/compiler/rustc_target/src/spec/targets/riscv32em_unknown_none_elf.rs
-@@ -0,0 +1,25 @@
-+use crate::spec::{Cc, LinkerFlavor, Lld, PanicStrategy, RelocModel, Target, TargetOptions};
-+
-+pub fn target() -> Target {
-+    Target {
-+        data_layout: "e-m:e-p:32:32-i64:64-n32-S32".into(),
-+        llvm_target: "riscv32".into(),
-+        pointer_width: 32,
-+        arch: "riscv32".into(),
-+
-+        options: TargetOptions {
-+            linker_flavor: LinkerFlavor::Gnu(Cc::No, Lld::Yes),
-+            linker: Some("rust-lld".into()),
-+            cpu: "generic-rv32".into(),
-+            features: "+e,+m".into(),
-+            llvm_abiname: "ilp32e".into(),
-+            max_atomic_width: Some(0),
-+            atomic_cas: false,
-+            panic_strategy: PanicStrategy::Abort,
-+            relocation_model: RelocModel::Static,
-+            emit_debug_gdb_scripts: false,
-+            eh_frame_header: false,
-+            ..Default::default()
-+        },
-+    }
-+}
 diff --git a/compiler/rustc_target/src/spec/targets/riscv32ema_unknown_none_elf.rs b/compiler/rustc_target/src/spec/targets/riscv32ema_unknown_none_elf.rs
 new file mode 100644
-index 00000000000..841406bcd86
+index 00000000..d59a11a4
 --- /dev/null
 +++ b/compiler/rustc_target/src/spec/targets/riscv32ema_unknown_none_elf.rs
-@@ -0,0 +1,24 @@
+@@ -0,0 +1,30 @@
 +use crate::spec::{Cc, LinkerFlavor, Lld, PanicStrategy, RelocModel, Target, TargetOptions};
 +
-+pub fn target() -> Target {
++pub(crate) fn target() -> Target {
 +    Target {
 +        data_layout: "e-m:e-p:32:32-i64:64-n32-S32".into(),
 +        llvm_target: "riscv32".into(),
++        metadata: crate::spec::TargetMetadata {
++            description: None,
++            tier: Some(3),
++            host_tools: Some(false),
++            std: Some(false),
++        },
 +        pointer_width: 32,
 +        arch: "riscv32".into(),
 +
@@ -95,17 +69,23 @@ index 00000000000..841406bcd86
 +}
 diff --git a/compiler/rustc_target/src/spec/targets/riscv64ema_unknown_none_elf.rs b/compiler/rustc_target/src/spec/targets/riscv64ema_unknown_none_elf.rs
 new file mode 100644
-index 00000000000..b5ee71dbbd1
+index 00000000..a089eb4c
 --- /dev/null
 +++ b/compiler/rustc_target/src/spec/targets/riscv64ema_unknown_none_elf.rs
-@@ -0,0 +1,26 @@
+@@ -0,0 +1,32 @@
 +use crate::spec::{Cc, CodeModel, LinkerFlavor, Lld, PanicStrategy};
 +use crate::spec::{RelocModel, Target, TargetOptions};
 +
-+pub fn target() -> Target {
++pub(crate) fn target() -> Target {
 +    Target {
 +        data_layout: "e-m:e-p:64:64-i64:64-i128:128-n32:64-S64".into(),
 +        llvm_target: "riscv64".into(),
++        metadata: crate::spec::TargetMetadata {
++            description: None,
++            tier: Some(3),
++            host_tools: Some(false),
++            std: Some(false),
++        },
 +        pointer_width: 64,
 +        arch: "riscv64".into(),
 +

@@ -2,7 +2,7 @@
 
 param1=${1:-}
 
-export RUST_COMMIT=5113ed28ea1451a13eae3a05dca0dbabfd56f587
+export RUST_COMMIT=9096f4fafa2ac2d771f866337b4ee7064cde8575
 
 # If -rust_commit specified then only export the rust commit variable
 if [ "$param1" == "-rust_commit" ]; then

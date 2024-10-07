@@ -10,7 +10,7 @@ cd rust
 LLVM_TOOLCHAIN_BIN=$PWD/build/$TOOLCHAIN_HOST_TRIPLET/llvm/bin
 
 if [ ! -d $LLVM_TOOLCHAIN_BIN ]; then
-	# Bootstrap stage0 C toolchain. These will later be overwritten by the LLVM cland build
+	# Bootstrap stage0 C toolchain. These will later be overwritten by the LLVM `clang` build
 	REAL_AR=`which ar`
 	REAL_CC=`which cc`
 	if [ "x$REAL_CC" == "x" ]; then

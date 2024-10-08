@@ -79,8 +79,10 @@ jobs:
       - name: Install ninja and riscv-tools
         if: matrix.os == 'macos'
         run: |
+          brew update
           brew install ninja
           brew tap riscv-software-src/riscv
+          brew upgrade riscv-gnu-toolchain
           brew install riscv-tools
 
       - name: Download source
